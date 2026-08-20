@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="NextVpn.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+
+    <!--
+        One grid, three equal columns, one gutter everywhere.
+
+        Every card on this page starts and ends on a column edge, so the left edge of
+        the exit-location card, the first statistic and the first detail are the same
+        line, and so are the right edges. Nothing is sized by eye.
+
+        Vertically the throughput row is the star row: spare height goes into the
+        graph rather than collecting as dead space under the last card. The layout is
+        at least as tall as the viewport (set in code-behind, from the viewport rather
+        than from the content, so measurement cannot loop), which is what lets that
+        star row do its job.
+    -->
+    <ScrollViewer x:Name="Scroller"
+                  VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
+                  SizeChanged="OnViewportChanged">
+
+        <Grid x:Name="RootLayout"
+              SizeChanged="OnRootSizeChanged"
+              Padding="{StaticResource PagePadding}"
+              MaxWidth="1180"
+              RowSpacing="12" ColumnSpacing="12">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />              <!-- hero -->
+                <RowDefinition Height="Auto" />              <!-- session totals -->
+                <RowDefinition x:Name="MainRow" Height="*" />    <!-- exit + throughput -->
+                <RowDefinition x:Name="StackedRow" Height="0" /> <!-- throughput when stacked -->
+                <RowDefinition Height="Auto" />              <!-- connection detail -->
+                <RowDefinition Height="Auto" />              <!-- notices -->
+            </Grid.RowDefinitions>
+
+            <!-- ============================ Hero ============================ -->
+            <Border Grid.Row="0" Grid.ColumnSpan="3" Style="{StaticResource Card}" Padding="18">
+                <Grid>
+                    <!-- Faint brand wash over the whole card, under the content. -->
+                    <Border Background="{ThemeResource HeroTintBrush}" Margin="-18"
+                            CornerRadius="{StaticResource CardCorner}" />
+
+                    <!-- Fixed height, content centred inside it: the hero is exactly the
+                         same size whether or not there are chips to show, and the space
+                         above and below the block is always equal. -->
+                    <Grid MinHeight="272">
+                        <StackPanel Spacing="12" VerticalAlignment="Center">
+
+                        <!--
+                            The connect control. Concentric circles on one centre: a
+                            static track, the rotating arc and the two ripples that run
+                            while a tunnel is being established, the glow, and the
+                            button itself. Everything that moves is animated on the
+                            compositor thread; see ConnectAnimator.
+                        -->
+                        <Grid x:Name="Dial" Width="158" Height="158" HorizontalAlignment="Center">
+                            <Ellipse x:Name="Track" Width="148" Height="148" IsHitTestVisible="False"
+                                     Stroke="{ThemeResource CardStrokeColorDefaultBrush}" StrokeThickness="1" />
+
+                            <Ellipse x:Name="Ripple1" Width="148" Height="148" Opacity="0" IsHitTestVisible="False"
+                                     Stroke="{StaticResource BrandGradient}" StrokeThickness="2" />
+                            <Ellipse x:Name="Ripple2" Width="148" Height="148" Opacity="0" IsHitTestVisible="False"
+                                     Stroke="{StaticResource BrandGradient}" StrokeThickness="2" />
+
+                            <!-- A single arc, 28% of the circumference, rotating while
+                                 the engine is dialling. The dash pattern is in units of
+                                 stroke thickness and sums to exactly one turn. -->
+                            <Ellipse x:Name="Arc" Width="148" Height="148" Opacity="0" IsHitTestVisible="False"
+                                     Stroke="{StaticResource BrandGradient}" StrokeThickness="3"
+                                     StrokeDashCap="Round" StrokeDashArray="43,112" />
+
+                            <Ellipse x:Name="Glow" Width="136" Height="136" IsHitTestVisible="False"
+                                     Fill="{ThemeResource HeroGlowBrush}" />
+
+                            <Button x:Name="PowerButton" Width="104" Height="104"
+                                    Style="{StaticResource ConnectButton}"
+                                    Command="{x:Bind ViewModel.ToggleCommand}"
+                                    AutomationProperties.Name="{x:Bind ViewModel.ActionLabel, Mode=OneWay}">
+                                <ToolTipService.ToolTip>
+                                    <ToolTip Content="{x:Bind ViewModel.ActionLabel, Mode=OneWay}" />
+                                </ToolTipService.ToolTip>
+                                <FontIcon Glyph="&#xE7E8;" FontSize="31" />
+                            </Button>
+                        </Grid>
+
+                        <StackPanel Spacing="4" HorizontalAlignment="Center" MaxWidth="520">
+                            <TextBlock x:Name="StatusHeading"
+                                       Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
+                                       Style="{StaticResource TitleTextBlockStyle}"
+                                       TextAlignment="Center" HorizontalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind ViewModel.StatusSubtitle, Mode=OneWay}"
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextAlignment="Center" HorizontalAlignment="Center"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- Two chips, only while a tunnel is up: what it is carried over
+                             and where it comes out. The card is a fixed height, so their
+                             appearance moves nothing else on the page. -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center"
+                                    Visibility="{x:Bind ViewModel.IsConnected, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <Border Style="{StaticResource Pill}">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <FontIcon Glyph="&#xE72E;" FontSize="12"
+                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.ProtocolText, Mode=OneWay}"
+                                               Style="{StaticResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Pill}">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <FontIcon Glyph="&#xE774;" FontSize="12"
+                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedRegionDisplay, Mode=OneWay}"
+                                               Style="{StaticResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ======================= Session totals ======================= -->
+            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE896;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Text="Downloaded" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.DownloadText, Mode=OneWay}" Style="{StaticResource StatValue}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE898;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Text="Uploaded" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.UploadText, Mode=OneWay}" Style="{StaticResource StatValue}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}">
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE916;" FontSize="14" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Text="Connected for" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.UptimeText, Mode=OneWay}" Style="{StaticResource StatValue}" />
+                </StackPanel>
+            </Border>
+
+            <!-- ========================= Exit location ====================== -->
+            <Button x:Name="ExitCard" Grid.Row="2" Grid.Column="0"
+                    Style="{StaticResource CardButton}"
+                    Click="OnPickRegion"
+                    AutomationProperties.Name="Change exit location">
+                <!-- Centred rather than left aligned, because this tile sits next to a
+                     tall graph and would otherwise read as a mostly empty card. -->
+                <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                    <!-- Windows ships no glyphs for regional indicator pairs, so flag
+                         emoji render as bare letters. Exits use a code badge instead. -->
+                    <Border Width="52" Height="52" CornerRadius="26" HorizontalAlignment="Center"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                        <Grid>
+                            <TextBlock Text="{x:Bind ViewModel.SelectedRegion.Code, Mode=OneWay}"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Visibility="{x:Bind ViewModel.SelectedRegion.IsCountry, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                            <FontIcon Glyph="&#xE909;" FontSize="19"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      Visibility="{x:Bind ViewModel.SelectedRegion.IsBest, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Exit location" Style="{StaticResource FieldLabel}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{x:Bind ViewModel.SelectedRegion.Name, Mode=OneWay}"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"
+                                   HorizontalAlignment="Center" TextAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
+                        <TextBlock Text="Change" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        <FontIcon Glyph="&#xE76C;" FontSize="10" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+
+            <!-- ========================== Throughput ======================== -->
+            <Border x:Name="GraphCard" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                    Style="{StaticResource Card}">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="Throughput" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Right">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Ellipse Width="7" Height="7" VerticalAlignment="Center">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="{ThemeResource GraphDown}" />
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="{x:Bind ViewModel.DownRateText, Mode=OneWay}"
+                                           Style="{StaticResource CaptionTextBlockStyle}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Ellipse Width="7" Height="7" VerticalAlignment="Center">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="{ThemeResource GraphUp}" />
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="{x:Bind ViewModel.UpRateText, Mode=OneWay}"
+                                           Style="{StaticResource CaptionTextBlockStyle}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1" MinHeight="110">
+                        <Canvas x:Name="GraphCanvas" SizeChanged="OnGraphResized" />
+                        <TextBlock x:Name="GraphEmpty" Text="No traffic yet"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ====================== Connection detail ===================== -->
+            <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource SubtleCard}">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE774;" FontSize="13" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Text="Your location" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.ClientRegionText, Mode=OneWay}"
+                               Style="{StaticResource FieldValue}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="4" Grid.Column="1" Style="{StaticResource SubtleCard}">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE839;" FontSize="13" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Text="Local proxy" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.PortsText, Mode=OneWay}"
+                               Style="{StaticResource FieldValue}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="4" Grid.Column="2" Style="{StaticResource SubtleCard}">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE72E;" FontSize="13" VerticalAlignment="Center"
+                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Text="System proxy" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.SystemProxyText, Mode=OneWay}"
+                               Style="{StaticResource FieldValue}" />
+                </StackPanel>
+            </Border>
+
+            <!-- =========================== Notices ========================== -->
+            <StackPanel Grid.Row="5" Grid.ColumnSpan="3" Spacing="8">
+                <muxc:InfoBar IsOpen="{x:Bind ViewModel.IsFaulted, Mode=OneWay}"
+                              Severity="Error" IsClosable="False"
+                              Title="Could not connect"
+                              Message="{x:Bind ViewModel.StatusDetail, Mode=OneWay}" />
+
+                <muxc:InfoBar IsOpen="{x:Bind ViewModel.HasSponsorPage, Mode=OneWay}"
+                              Severity="Informational" IsClosable="True"
+                              Message="The network provided a landing page for this session.">
+                    <muxc:InfoBar.ActionButton>
+                        <HyperlinkButton Content="Open" Click="OnOpenSponsorPage" />
+                    </muxc:InfoBar.ActionButton>
+                </muxc:InfoBar>
+
+                <muxc:InfoBar IsOpen="{x:Bind ViewModel.HasUpgradeNotice, Mode=OneWay}"
+                              Severity="Informational" IsClosable="True"
+                              Message="{x:Bind ViewModel.UpgradeNoticeText, Mode=OneWay}" />
+            </StackPanel>
+
+        </Grid>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,17 @@
+# Line endings are normalised in the repository and checked out native, so a
+# contributor on any platform gets a sane working copy.
+* text=auto
+
+# PowerShell is run by Windows PowerShell here, which wants CRLF.
+*.ps1 text eol=crlf
+
+# The engine reads these byte for byte and verifies the server list against a
+# signature. Normalising them would silently produce a file the engine rejects.
+engine/server_list.dat binary
+engine/base.config     binary
+
+*.exe binary
+*.dll binary
+*.ico binary
+*.png binary
+*.pri binary

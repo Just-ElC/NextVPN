@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="NextVpn.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:views="using:NextVpn.Views"
+    mc:Ignorable="d"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+
+    <Page.Resources>
+        <!-- Label + description on the left, control on the right. -->
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="ColumnSpacing" Value="20" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer Padding="{StaticResource PagePadding}"
+                  VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="860" HorizontalAlignment="Stretch" Spacing="16">
+
+            <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
+
+            <!-- ======================= Connection ======================= -->
+            <StackPanel>
+                <TextBlock Text="Connection" Style="{StaticResource GroupHeader}" />
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="18">
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Exit location" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="The country your traffic appears to come from." />
+                            </StackPanel>
+                            <Button Grid.Column="1" VerticalAlignment="Center" Click="OnOpenRegions"
+                                    Content="{x:Bind ViewModel.SelectedRegionDisplay, Mode=OneWay}" />
+                        </Grid>
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Split tunnelling" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Send traffic bound for your own country straight out, bypassing the tunnel. Local banking and streaming keep working, but those connections are not hidden." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.SplitTunnelOwnRegion, Mode=TwoWay}"
+                                          Toggled="OnReconnectingSettingChanged" />
+                        </Grid>
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Relax connection timeouts" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Give each candidate server longer to answer and never give up establishing. Helps on very slow or lossy links." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.DisableTimeouts, Mode=TwoWay}"
+                                          Toggled="OnReconnectingSettingChanged" />
+                        </Grid>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Upstream proxy" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Style="{StaticResource Secondary}"
+                                       Text="Optional. Route the tunnel through another proxy first, for example http://user:pass@host:8080" />
+                            <TextBox Text="{x:Bind Settings.UpstreamProxyUrl, Mode=TwoWay}"
+                                     PlaceholderText="none" LostFocus="OnReconnectingSettingChanged" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ======================== Transports ======================= -->
+            <StackPanel>
+                <TextBlock Text="Transports" Style="{StaticResource GroupHeader}" />
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource Secondary}"
+                                   Text="Leave everything unchecked to let the engine pick whatever gets through. That is the right choice on almost every network; restrict it only when you know a specific transport works." />
+
+                        <ItemsControl ItemsSource="{x:Bind Protocols}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="views:ProtocolOption">
+                                    <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}" MinWidth="0" Margin="0,1">
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource BodyTextBlockStyle}" />
+                                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource Secondary}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ===================== System integration ================== -->
+            <StackPanel>
+                <TextBlock Text="System" Style="{StaticResource GroupHeader}" />
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="18">
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Route the whole system" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Points Windows at the local proxy while connected, and puts your original settings back on disconnect." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.SetSystemProxy, Mode=TwoWay}"
+                                          Toggled="OnSettingChanged" />
+                        </Grid>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Bypass list" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Style="{StaticResource Secondary}"
+                                       Text="Hosts that go direct instead of through the tunnel. Semicolon separated, * wildcards allowed." />
+                            <TextBox Text="{x:Bind Settings.ProxyBypassList, Mode=TwoWay}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" Height="76"
+                                     FontFamily="Consolas" FontSize="12"
+                                     LostFocus="OnSettingChanged" />
+                            <HyperlinkButton Content="Reset to defaults" Click="OnResetBypass" Padding="0" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Local proxy ports" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Style="{StaticResource Secondary}"
+                                       Text="0 means pick a free port automatically. Set a fixed port if other software needs to point at it." />
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <muxc:NumberBox Grid.Column="0" Header="HTTP" Minimum="0" Maximum="65535"
+                                                SpinButtonPlacementMode="Compact"
+                                                Value="{x:Bind HttpPortValue, Mode=TwoWay}"
+                                                ValueChanged="OnPortChanged" />
+                                <muxc:NumberBox Grid.Column="1" Header="SOCKS" Minimum="0" Maximum="65535"
+                                                SpinButtonPlacementMode="Compact"
+                                                Value="{x:Bind SocksPortValue, Mode=TwoWay}"
+                                                ValueChanged="OnPortChanged" />
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ==================== Startup and window =================== -->
+            <StackPanel>
+                <TextBlock Text="Startup and window" Style="{StaticResource GroupHeader}" />
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="18">
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Keep running in the notification area" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Closing or minimising the window parks the app in the tray instead of quitting. Turn this off and the close button really quits." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.MinimiseToTray, Mode=TwoWay}"
+                                          Toggled="OnSettingChanged" />
+                        </Grid>
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Start in the notification area" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Launch without showing the window." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.StartMinimised, Mode=TwoWay}"
+                                          Toggled="OnSettingChanged" />
+                        </Grid>
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Connect on launch" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Start the tunnel as soon as the app opens." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.ConnectOnLaunch, Mode=TwoWay}"
+                                          Toggled="OnSettingChanged" />
+                        </Grid>
+
+                        <Grid Style="{StaticResource Row}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Launch when I sign in" Style="{StaticResource BodyTextBlockStyle}" />
+                                <TextBlock Style="{StaticResource Secondary}"
+                                           Text="Adds a startup entry for your user account only. No administrator rights needed." />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center" MinWidth="0"
+                                          IsOn="{x:Bind Settings.StartWithWindows, Mode=TwoWay}"
+                                          Toggled="OnStartupToggled" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ======================== Appearance ======================= -->
+            <StackPanel>
+                <TextBlock Text="Appearance" Style="{StaticResource GroupHeader}" />
+                <Border Style="{StaticResource Card}">
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Theme" Style="{StaticResource BodyTextBlockStyle}" />
+                            <TextBlock Style="{StaticResource Secondary}" Text="Takes effect immediately." />
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" x:Name="ThemeCombo" VerticalAlignment="Center"
+                                  MinWidth="150" SelectionChanged="OnThemeChanged">
+                            <ComboBoxItem Content="Follow system" />
+                            <ComboBoxItem Content="Light" />
+                            <ComboBoxItem Content="Dark" />
+                        </ComboBox>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- =========================== About ======================== -->
+            <StackPanel>
+                <TextBlock Text="About" Style="{StaticResource GroupHeader}" />
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="12">
+                        <StackPanel>
+                            <TextBlock Text="NextVPN" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind VersionText}" Style="{StaticResource Secondary}" />
+                        </StackPanel>
+
+                        <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind EngineText}" />
+
+                        <TextBlock Style="{StaticResource Secondary}"
+                                   Text="Circumvention is provided by psiphon-tunnel-core, the open source engine from Psiphon Inc., licensed under the GPLv3. This client is an independent interface and is not affiliated with or endorsed by Psiphon Inc." />
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Open data folder" Click="OnOpenDataFolder" />
+                            <Button Content="Open engine folder" Click="OnOpenEngineFolder" />
+                        </StackPanel>
+
+                        <muxc:InfoBar IsOpen="True" Severity="Success" IsClosable="False"
+                                      Title="No self-updating"
+                                      Message="This client never downloads a replacement for itself and never rewrites or deletes its own files. Updates are entirely your decision." />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

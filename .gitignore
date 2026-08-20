@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+build/
+dist/
+TestResults/
+
+# The generated runtime config and datastore live in %LOCALAPPDATA%, never here,
+# but a stray copy next to the sources should not be committed either.
+runtime.config
+settings.json
+proxy-backup.json
+
+# Editors
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# Windows
+Thumbs.db
+desktop.ini

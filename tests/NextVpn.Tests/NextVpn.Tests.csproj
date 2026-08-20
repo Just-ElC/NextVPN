@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>NextVpn.Tests</RootNamespace>
+
+    <!-- The machine may only carry a newer runtime than the app targets; the tests
+         are framework-independent, so let them run on whatever is installed. -->
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <!--
+    The application is a WinUI executable, so it cannot be referenced from a test
+    project: loading it would pull in the XAML framework and a UI thread. The
+    parts worth testing have no UI dependency at all, so they are compiled into
+    this assembly from the same source files instead. Nothing is duplicated - if
+    a source file changes, these tests compile against the change.
+  -->
+  <ItemGroup>
+    <Compile Include="..\..\src\NextVpn\Core\*.cs" Link="Core\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\NextVpn\Interop\ProcessJob.cs" Link="Interop\ProcessJob.cs" />
+    <Compile Include="..\..\src\NextVpn\Interop\SystemProxy.cs" Link="Interop\SystemProxy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
+  </ItemGroup>
+
+</Project>
