@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    NextVPN setup.
+
+    Self-contained and trimmed, so it runs on a machine with no .NET installed at
+    all - which is exactly the machine that needs an installer. The application
+    payload is embedded as a zip; the same binary built without one is shipped
+    inside the payload as the uninstaller.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Platforms>x64</Platforms>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>NextVpn.Setup</RootNamespace>
+    <AssemblyName>NextVPN-Setup</AssemblyName>
+
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DebugType>none</DebugType>
+
+    <Version>1.0.0</Version>
+    <Product>NextVPN</Product>
+    <Company>NextOS</Company>
+    <AssemblyTitle>NextVPN setup</AssemblyTitle>
+    <ApplicationIcon>..\..\src\NextVpn\Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!--
+    Set by build.ps1. With it, this builds the installer; without it, the same
+    source builds the uninstaller that ships alongside the application.
+  -->
+  <ItemGroup Condition="'$(PayloadZip)' != ''">
+    <EmbeddedResource Include="$(PayloadZip)" LogicalName="NextVpn.Setup.payload.zip" />
+  </ItemGroup>
+
+</Project>

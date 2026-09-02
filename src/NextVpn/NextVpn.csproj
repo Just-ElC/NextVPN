@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>NextVpn</RootNamespace>
+    <AssemblyName>NextVPN</AssemblyName>
+
+    <!-- One version for the About page, the installer file name and the entry in
+         Installed apps. Bump here and everything downstream follows. -->
+    <Version>1.0.0</Version>
+    <Product>NextVPN</Product>
+    <Company>NextOS</Company>
+    <Copyright>NextOS</Copyright>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- WinUI 3, unpackaged: plain .exe, no MSIX, no admin install -->
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>false</SelfContained>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DefaultLanguage>en-US</DefaultLanguage>
+
+    <!--
+      MVVMTK0045 advises that [ObservableProperty] on a field cannot emit AOT-safe
+      WinRT marshalling, and suggests partial properties instead. The generator in
+      CommunityToolkit.Mvvm 8.4.2 does not emit implementations for those, so the
+      suggestion cannot be taken here. Suppressed only while AOT is off, so the
+      advice comes back the moment it becomes relevant.
+    -->
+    <NoWarn Condition="'$(PublishAot)' != 'true'">$(NoWarn);MVVMTK0045</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.*" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+    <!-- Supplies the MSIX/PRI MSBuild tasks that otherwise only ship with Visual Studio,
+         so this project builds with nothing but the .NET SDK installed. -->
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" Version="1.7.*" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Windows App SDK 1.7 points this at itself, where the assembly does not exist.
+         Redirect it at the package that actually carries the tasks. -->
+    <MsixTaskAssemblyLocation>$(PkgMicrosoft_Windows_SDK_BuildTools_MSIX)\tools\net6.0\</MsixTaskAssemblyLocation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Psiphon tunnel engine shipped alongside the app, never extracted to %TEMP% -->
+  <ItemGroup>
+    <None Include="..\..\engine\**\*.*" Link="engine\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
