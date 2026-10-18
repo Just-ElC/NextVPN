@@ -103,9 +103,11 @@ install_subdir('data/icons/hicolor', install_dir: datadir / 'icons')
 
 subdir('po')
 
+# Refreshes the icon and desktop caches on a direct install. Packaging builds
+# install into a DESTDIR, where this is skipped, and may not have the tools.
 gnome.post_install(
-  gtk_update_icon_cache: true,
-  update_desktop_database: true,
+  gtk_update_icon_cache: find_program('gtk4-update-icon-cache', 'gtk-update-icon-cache', required: false).found(),
+  update_desktop_database: find_program('update-desktop-database', required: false).found(),
 )
 
 # ------------------------------------------------------------------- tests

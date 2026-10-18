@@ -13,8 +13,8 @@ out=$(cd "${1:-.}" && pwd)
 work=$(mktemp -d)
 trap 'rm -rf -- "$work"' EXIT
 
-meson setup "$work/build" "$root" --prefix=/usr --buildtype=plain -Dtests=false >/dev/null
-meson compile -C "$work/build" >/dev/null
+meson setup "$work/build" "$root" --prefix=/usr --buildtype=plain -Dtests=false
+meson compile -C "$work/build"
 DESTDIR="$work/root" meson install -C "$work/build" --quiet
 
 mkdir -p "$work/root/DEBIAN"
