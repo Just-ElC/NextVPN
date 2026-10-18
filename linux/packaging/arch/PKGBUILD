@@ -1,0 +1,44 @@
+# NextVPN for Arch Linux, CachyOS, EndeavourOS, Manjaro.
+# Builds this checkout:
+#
+#   cd linux/packaging/arch && makepkg -si
+#
+# The bundled engine is the official static, UPX-packed Psiphon build: strip
+# would damage it, and there is nothing in it to put in a debug package.
+
+pkgname=nextvpn
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Free internet in one click: a GTK client for the Psiphon network'
+arch=('x86_64')
+url='https://github.com/Just-ElC/NextVPN'
+# The bundled engine is GPL-3.0-only. NextVPN's own code has no licence declared
+# in the repository yet; add it here once it does.
+license=('GPL-3.0-only')
+depends=(
+  'python'
+  'python-gobject'
+  'python-cairo'
+  'gtk4'
+  'libadwaita'
+  'gsettings-desktop-schemas'
+  'hicolor-icon-theme'
+)
+makedepends=('meson' 'gettext')
+checkdepends=('desktop-file-utils' 'appstream')
+options=('!strip' '!debug')
+
+_root="$(cd "$startdir/../../.." && pwd)"
+
+build() {
+  arch-meson "$_root" build -Dpython3=/usr/bin/python3
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}

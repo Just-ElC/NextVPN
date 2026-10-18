@@ -1,0 +1,665 @@
+# Russian translation of NextVPN for Linux.
+msgid ""
+msgstr ""
+"Project-Id-Version: nextvpn 1.0.0\n"
+"PO-Revision-Date: 2026-10-18 12:00+0300\n"
+"Last-Translator: NextOS\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+# --- Connection state -------------------------------------------------
+
+msgid "Connected"
+msgstr "Подключено"
+
+msgid "Connecting"
+msgstr "Подключение"
+
+msgid "Disconnecting"
+msgstr "Отключение"
+
+msgid "Connection failed"
+msgstr "Не удалось подключиться"
+
+msgid "Not connected"
+msgstr "Не подключено"
+
+msgid "Traffic is exiting through {country}"
+msgstr "Трафик выходит через: {country}"
+
+msgid "Your traffic is protected"
+msgstr "Ваш трафик защищён"
+
+msgid "Finding a route that works on this network"
+msgstr "Ищем маршрут, который работает в этой сети"
+
+msgid "Closing the tunnel"
+msgstr "Закрываем туннель"
+
+msgid "Something went wrong"
+msgstr "Что-то пошло не так"
+
+msgid "Your traffic is going out unprotected"
+msgstr "Ваш трафик идёт без защиты"
+
+msgid "Disconnect"
+msgstr "Отключить"
+
+msgid "Cancel"
+msgstr "Отменить"
+
+msgid "Connect"
+msgstr "Подключить"
+
+# --- Units --------------------------------------------------------------
+
+msgid "B"
+msgstr "Б"
+
+msgid "KB"
+msgstr "КБ"
+
+msgid "MB"
+msgstr "МБ"
+
+msgid "GB"
+msgstr "ГБ"
+
+msgid "TB"
+msgstr "ТБ"
+
+msgid "B/s"
+msgstr "Б/с"
+
+msgid "KB/s"
+msgstr "КБ/с"
+
+msgid "MB/s"
+msgstr "МБ/с"
+
+msgid "GB/s"
+msgstr "ГБ/с"
+
+# --- Pages --------------------------------------------------------------
+
+msgid "Connection"
+msgstr "Подключение"
+
+msgid "Locations"
+msgstr "Локации"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Activity"
+msgstr "Журнал"
+
+msgid "Main menu"
+msgstr "Главное меню"
+
+msgid "About NextVPN"
+msgstr "О NextVPN"
+
+msgid "Quit"
+msgstr "Выйти"
+
+msgid "Show NextVPN"
+msgstr "Показать NextVPN"
+
+# --- Connection page ------------------------------------------------
+
+msgid "Downloaded"
+msgstr "Скачано"
+
+msgid "Uploaded"
+msgstr "Отдано"
+
+msgid "Connected for"
+msgstr "Время в сети"
+
+msgid "Exit location"
+msgstr "Страна выхода"
+
+msgid "Change exit location"
+msgstr "Сменить страну выхода"
+
+msgid "Change"
+msgstr "Сменить"
+
+msgid "Throughput"
+msgstr "Скорость"
+
+msgid "No traffic yet"
+msgstr "Трафика пока нет"
+
+msgid "Your location"
+msgstr "Ваше местоположение"
+
+msgid "Local proxy"
+msgstr "Локальный прокси"
+
+msgid "System proxy"
+msgstr "Системный прокси"
+
+msgid "Copy proxy settings for a terminal"
+msgstr "Скопировать настройки прокси для терминала"
+
+msgid "Copied. Paste it into a terminal to send its traffic through the tunnel."
+msgstr "Скопировано. Вставьте в терминал, чтобы его трафик шёл через туннель."
+
+msgid "Dismiss"
+msgstr "Скрыть"
+
+msgid "Could not connect"
+msgstr "Не удалось подключиться"
+
+msgid "Open"
+msgstr "Открыть"
+
+msgid "The network provided a landing page for this session."
+msgstr "Сеть предложила стартовую страницу для этого сеанса."
+
+msgid "Version {version} exists upstream. Nothing was downloaded and no file here was changed."
+msgstr "Вышла версия {version}. Ничего не скачано, ни один файл здесь не изменён."
+
+msgid "Off — configure apps manually"
+msgstr "Выключен — настройте программы вручную"
+
+msgid "Applied: {desktops}"
+msgstr "Включён: {desktops}"
+
+msgid "No desktop settings to change"
+msgstr "Нет настроек рабочего стола для изменения"
+
+msgid "Applies on connect"
+msgstr "Включится при подключении"
+
+# --- Locations page -------------------------------------------------
+
+msgid "Best performance"
+msgstr "Самая быстрая"
+
+msgid "Where your traffic leaves the network. Changing this while connected rebuilds the tunnel."
+msgstr "Страна, из которой ваш трафик выходит в интернет. Смена во время подключения пересоздаёт туннель."
+
+msgid "Search locations"
+msgstr "Поиск страны"
+
+msgid "Countries appear here once the tunnel engine has started. Until then, Best performance lets the engine choose."
+msgstr "Страны появятся здесь после первого запуска движка. А пока вариант «Самая быстрая» оставляет выбор движку."
+
+msgid "No location matches “{query}”"
+msgstr "Нет стран, подходящих под «{query}»"
+
+# --- Settings page ----------------------------------------------------
+
+msgid "The country your traffic appears to come from."
+msgstr "Страна, из которой будто бы приходит ваш трафик."
+
+msgid "Split tunnelling"
+msgstr "Раздельное туннелирование"
+
+msgid "Send traffic bound for your own country straight out, bypassing the tunnel. Local banking and streaming keep working, but those connections are not hidden."
+msgstr "Трафик к сайтам вашей страны идёт напрямую, мимо туннеля. Местные банки и стриминг продолжат работать, но эти соединения не скрываются."
+
+msgid "Relax connection timeouts"
+msgstr "Увеличить таймауты подключения"
+
+msgid "Give each candidate server longer to answer and never give up establishing. Helps on very slow or lossy links."
+msgstr "Давать каждому серверу больше времени на ответ и не прекращать попытки подключения. Помогает на очень медленных или нестабильных сетях."
+
+msgid "Identify to the servers as"
+msgstr "Представляться серверам как"
+
+msgid "The servers tune their settings by platform. Windows gets this client exactly what NextVPN for Windows gets from the same servers."
+msgstr "Серверы подбирают настройки под платформу. С вариантом Windows этот клиент получает от тех же серверов ровно то же, что NextVPN для Windows."
+
+msgid "Upstream proxy, e.g. http://user:pass@host:8080"
+msgstr "Вышестоящий прокси, например http://user:pass@host:8080"
+
+msgid "An upstream proxy needs a scheme, such as http:// or socks5://"
+msgstr "Укажите схему прокси, например http:// или socks5://"
+
+msgid "Upstream proxy saved"
+msgstr "Вышестоящий прокси сохранён"
+
+msgid "Transports"
+msgstr "Транспорты"
+
+msgid "Leave everything unchecked to let the engine pick whatever gets through. That is the right choice on almost every network; restrict it only when you know a specific transport works."
+msgstr "Оставьте всё неотмеченным, чтобы движок сам выбрал то, что проходит. Это лучший вариант почти в любой сети; ограничивайте, только если точно знаете, какой транспорт работает."
+
+msgid "Obfuscated SSH. Fastest, works on most networks."
+msgstr "Обфусцированный SSH. Самый быстрый, работает в большинстве сетей."
+
+msgid "Plain SSH. Lowest overhead, most easily fingerprinted."
+msgstr "Обычный SSH. Минимальные накладные расходы, но легче всего распознаётся."
+
+msgid "UDP based. Good on lossy or mobile links."
+msgstr "На основе UDP. Хорош для нестабильных и мобильных сетей."
+
+msgid "Wrapped in TLS so it resembles ordinary HTTPS."
+msgstr "Обёрнут в TLS и похож на обычный HTTPS."
+
+msgid "HTTPS-shaped transport for restrictive networks."
+msgstr "Транспорт в виде HTTPS для сетей с жёсткими ограничениями."
+
+msgid "Meek (fronted)"
+msgstr "Meek (через CDN)"
+
+msgid "Routes via a CDN. Slower but very hard to block."
+msgstr "Идёт через CDN. Медленнее, но заблокировать очень сложно."
+
+msgid "In-proxy WebRTC"
+msgstr "In-proxy WebRTC"
+
+msgid "Peer-assisted WebRTC relay. Best under heavy censorship."
+msgstr "Ретрансляция WebRTC через других участников. Лучший выбор при жёсткой цензуре."
+
+msgid "Refraction networking via decoy hosts."
+msgstr "Refraction networking через узлы-приманки."
+
+msgid "Shadowsocks-shaped transport."
+msgstr "Транспорт в виде Shadowsocks."
+
+msgid "System"
+msgstr "Система"
+
+msgid "Route the whole desktop"
+msgstr "Направить весь рабочий стол"
+
+msgid "Points GNOME and KDE at the local proxy while connected, keeps it there while the tunnel reconnects so nothing leaks around it, and puts your own settings back on disconnect."
+msgstr "Пока туннель подключён, GNOME и KDE используют локальный прокси. Во время переподключения прокси остаётся, чтобы трафик не утёк мимо туннеля, а при отключении возвращаются ваши прежние настройки."
+
+msgid "Found here: {desktops}."
+msgstr "Найдено здесь: {desktops}."
+
+msgid "No GNOME or KDE proxy settings were found here; point applications at the local proxy by hand."
+msgstr "Настройки прокси GNOME и KDE здесь не найдены; укажите локальный прокси в программах вручную."
+
+msgid "GNOME"
+msgstr "GNOME"
+
+msgid "KDE"
+msgstr "KDE"
+
+msgid "Hosts that go direct"
+msgstr "Адреса в обход туннеля"
+
+msgid "Separated by commas. CIDR ranges such as 10.0.0.0/8 and * wildcards such as *.local work."
+msgstr "Через запятую. Работают CIDR-диапазоны вроде 10.0.0.0/8 и маски вроде *.local."
+
+msgid "Reset to defaults"
+msgstr "Вернуть по умолчанию"
+
+msgid "Bypass list saved"
+msgstr "Список исключений сохранён"
+
+msgid "HTTP proxy port"
+msgstr "Порт HTTP-прокси"
+
+msgid "SOCKS proxy port"
+msgstr "Порт SOCKS-прокси"
+
+msgid "0 picks a free port automatically. Set a fixed port if other software needs to point at it."
+msgstr "0 — свободный порт выбирается автоматически. Задайте постоянный порт, если на него должны указывать другие программы."
+
+msgid "Startup and window"
+msgstr "Запуск и окно"
+
+msgid "Keep running in the notification area"
+msgstr "Оставаться в области уведомлений"
+
+msgid "Closing the window parks the app in the tray instead of quitting. Turn this off and the close button really quits."
+msgstr "При закрытии окна приложение сворачивается в трей, а не завершается. Выключите — и кнопка закрытия будет действительно закрывать программу."
+
+msgid "No notification area was found on this desktop, so closing the window quits. On GNOME, install the AppIndicator extension."
+msgstr "Область уведомлений на этом рабочем столе не найдена, поэтому закрытие окна завершает программу. В GNOME установите расширение AppIndicator."
+
+msgid "Start in the notification area"
+msgstr "Запускаться в области уведомлений"
+
+msgid "Launch without showing the window."
+msgstr "Запускаться без показа окна."
+
+msgid "Connect on launch"
+msgstr "Подключаться при запуске"
+
+msgid "Start the tunnel as soon as the app opens."
+msgstr "Запускать туннель сразу после открытия приложения."
+
+msgid "Launch when I sign in"
+msgstr "Запускать при входе в систему"
+
+msgid "Adds a startup entry for your user account only. No administrator rights needed."
+msgstr "Добавляет автозапуск только для вашей учётной записи. Права администратора не нужны."
+
+msgid "Could not change the startup entry"
+msgstr "Не удалось изменить автозапуск"
+
+msgid "Appearance"
+msgstr "Оформление"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "Takes effect immediately."
+msgstr "Применяется сразу."
+
+msgid "Follow system"
+msgstr "Как в системе"
+
+msgid "Light"
+msgstr "Светлая"
+
+msgid "Dark"
+msgstr "Тёмная"
+
+msgid "About"
+msgstr "О программе"
+
+msgid "Version {version} for Linux"
+msgstr "Версия {version} для Linux"
+
+msgid "Tunnel engine"
+msgstr "Движок туннеля"
+
+msgid "Checking…"
+msgstr "Проверка…"
+
+msgid "psiphon-tunnel-core {revision} ({go}), built {date}"
+msgstr "psiphon-tunnel-core {revision} ({go}), сборка от {date}"
+
+msgid "Not found. Install psiphon-tunnel-core or point NEXTVPN_ENGINE at it."
+msgstr "Не найден. Установите psiphon-tunnel-core или укажите путь к нему в NEXTVPN_ENGINE."
+
+msgid "{path}, version unknown"
+msgstr "{path}, версия неизвестна"
+
+msgid "Psiphon"
+msgstr "Psiphon"
+
+msgid "Circumvention is provided by psiphon-tunnel-core, the open source engine from Psiphon Inc., licensed under the GPLv3. This client uses the same server network as NextVPN for Windows. It is an independent interface and is not affiliated with or endorsed by Psiphon Inc."
+msgstr "Обход блокировок обеспечивает psiphon-tunnel-core — открытый движок Psiphon Inc. под лицензией GPLv3. Этот клиент использует ту же сеть серверов, что и NextVPN для Windows. Это независимый интерфейс, не связанный с Psiphon Inc. и не одобренный ею."
+
+msgid "No self-updating"
+msgstr "Без самообновления"
+
+msgid "This client never downloads a replacement for itself and never rewrites or deletes its own files. Updates are entirely your decision."
+msgstr "Клиент никогда не скачивает замену самому себе и не перезаписывает и не удаляет свои файлы. Обновляться или нет — решаете только вы."
+
+msgid "Open data folder"
+msgstr "Открыть папку данных"
+
+msgid "Open settings folder"
+msgstr "Открыть папку настроек"
+
+msgid "Open engine folder"
+msgstr "Открыть папку движка"
+
+# --- Activity page ----------------------------------------------------
+
+msgid "Live output from the tunnel engine. Useful when a network is blocking connections."
+msgstr "Сообщения движка туннеля в реальном времени. Пригодится, если сеть блокирует подключения."
+
+msgid "Verbose diagnostics"
+msgstr "Подробная диагностика"
+
+msgid "Copy all"
+msgstr "Копировать всё"
+
+msgid "Clear"
+msgstr "Очистить"
+
+msgid "Nothing yet"
+msgstr "Пока пусто"
+
+msgid "Everything the tunnel engine reports appears here as it happens."
+msgstr "Всё, что сообщает движок туннеля, появляется здесь по мере происходящего."
+
+msgid "Activity copied"
+msgstr "Журнал скопирован"
+
+# --- Log lines and errors ---------------------------------------------
+
+msgid "Starting tunnel"
+msgstr "Запуск туннеля"
+
+msgid "Stopping tunnel"
+msgstr "Остановка туннеля"
+
+msgid "Switching exit to {region}"
+msgstr "Смена страны выхода: {region}"
+
+msgid "Rebuilding the tunnel to apply a changed setting"
+msgstr "Пересоздаём туннель, чтобы применить изменённую настройку"
+
+msgid "System proxy set to {proxy} ({desktops})"
+msgstr "Системный прокси установлен: {proxy} ({desktops})"
+
+msgid "System proxy restored"
+msgstr "Системный прокси восстановлен"
+
+msgid "System proxy: {error}"
+msgstr "Системный прокси: {error}"
+
+msgid "No desktop proxy settings were found to change. Point applications at {proxy} by hand."
+msgstr "Не найдено настроек прокси рабочего стола. Укажите программам {proxy} вручную."
+
+msgid "Tunnel engine not found. Install psiphon-tunnel-core or point NEXTVPN_ENGINE at it."
+msgstr "Движок туннеля не найден. Установите psiphon-tunnel-core или укажите путь к нему в NEXTVPN_ENGINE."
+
+msgid "The tunnel engine at {path} is not executable."
+msgstr "Движок туннеля {path} не является исполняемым файлом."
+
+msgid "Embedded server list not found at {path}"
+msgstr "Встроенный список серверов не найден: {path}"
+
+msgid "Could not prepare tunnel configuration: {error}"
+msgstr "Не удалось подготовить конфигурацию туннеля: {error}"
+
+msgid "Could not start the tunnel engine: {error}"
+msgstr "Не удалось запустить движок туннеля: {error}"
+
+msgid "The tunnel engine stopped unexpectedly: {reason}"
+msgstr "Движок туннеля неожиданно остановился: {reason}"
+
+msgid "The tunnel engine stopped unexpectedly (exit code {code})."
+msgstr "Движок туннеля неожиданно остановился (код выхода {code})."
+
+msgid "The tunnel stopped unexpectedly."
+msgstr "Туннель неожиданно остановился."
+
+# --- Command line and about -------------------------------------------
+
+msgid "Connect the tunnel"
+msgstr "Подключить туннель"
+
+msgid "Disconnect the tunnel"
+msgstr "Отключить туннель"
+
+msgid "Connect or disconnect"
+msgstr "Подключить или отключить"
+
+msgid "Disconnect and quit the running instance"
+msgstr "Отключить и закрыть запущенную копию"
+
+msgid "Print the version and exit"
+msgstr "Показать версию и выйти"
+
+msgid "Free internet in one click. Runs on the open psiphon-tunnel-core engine (GPLv3) and uses the same server network as NextVPN for Windows. NextVPN is an independent application and is not affiliated with Psiphon Inc."
+msgstr "Свободный интернет в один клик. Работает на открытом движке psiphon-tunnel-core (GPLv3) и использует ту же сеть серверов, что и NextVPN для Windows. NextVPN — независимое приложение, не связанное с Psiphon Inc."
+
+# --- Countries ------------------------------------------------------------
+
+msgid "United Arab Emirates"
+msgstr "ОАЭ"
+
+msgid "Armenia"
+msgstr "Армения"
+
+msgid "Argentina"
+msgstr "Аргентина"
+
+msgid "Austria"
+msgstr "Австрия"
+
+msgid "Australia"
+msgstr "Австралия"
+
+msgid "Belgium"
+msgstr "Бельгия"
+
+msgid "Bulgaria"
+msgstr "Болгария"
+
+msgid "Brazil"
+msgstr "Бразилия"
+
+msgid "Belarus"
+msgstr "Беларусь"
+
+msgid "Canada"
+msgstr "Канада"
+
+msgid "Switzerland"
+msgstr "Швейцария"
+
+msgid "Chile"
+msgstr "Чили"
+
+msgid "China"
+msgstr "Китай"
+
+msgid "Czechia"
+msgstr "Чехия"
+
+msgid "Germany"
+msgstr "Германия"
+
+msgid "Denmark"
+msgstr "Дания"
+
+msgid "Estonia"
+msgstr "Эстония"
+
+msgid "Spain"
+msgstr "Испания"
+
+msgid "Finland"
+msgstr "Финляндия"
+
+msgid "France"
+msgstr "Франция"
+
+msgid "United Kingdom"
+msgstr "Великобритания"
+
+msgid "Georgia"
+msgstr "Грузия"
+
+msgid "Hong Kong"
+msgstr "Гонконг"
+
+msgid "Hungary"
+msgstr "Венгрия"
+
+msgid "Indonesia"
+msgstr "Индонезия"
+
+msgid "Ireland"
+msgstr "Ирландия"
+
+msgid "Israel"
+msgstr "Израиль"
+
+msgid "India"
+msgstr "Индия"
+
+msgid "Iran"
+msgstr "Иран"
+
+msgid "Iceland"
+msgstr "Исландия"
+
+msgid "Italy"
+msgstr "Италия"
+
+msgid "Japan"
+msgstr "Япония"
+
+msgid "South Korea"
+msgstr "Южная Корея"
+
+msgid "Kazakhstan"
+msgstr "Казахстан"
+
+msgid "Lithuania"
+msgstr "Литва"
+
+msgid "Latvia"
+msgstr "Латвия"
+
+msgid "Moldova"
+msgstr "Молдова"
+
+msgid "Mexico"
+msgstr "Мексика"
+
+msgid "Malaysia"
+msgstr "Малайзия"
+
+msgid "Netherlands"
+msgstr "Нидерланды"
+
+msgid "Norway"
+msgstr "Норвегия"
+
+msgid "New Zealand"
+msgstr "Новая Зеландия"
+
+msgid "Poland"
+msgstr "Польша"
+
+msgid "Portugal"
+msgstr "Португалия"
+
+msgid "Romania"
+msgstr "Румыния"
+
+msgid "Serbia"
+msgstr "Сербия"
+
+msgid "Russia"
+msgstr "Россия"
+
+msgid "Sweden"
+msgstr "Швеция"
+
+msgid "Singapore"
+msgstr "Сингапур"
+
+msgid "Slovakia"
+msgstr "Словакия"
+
+msgid "Turkmenistan"
+msgstr "Туркменистан"
+
+msgid "Turkiye"
+msgstr "Турция"
+
+msgid "Ukraine"
+msgstr "Украина"
+
+msgid "United States"
+msgstr "США"
+
+msgid "Uzbekistan"
+msgstr "Узбекистан"
+
+msgid "South Africa"
+msgstr "ЮАР"

@@ -1,0 +1,6 @@
+/* Brand accent for libadwaita 1.6 and later, which reads CSS variables. */
+:root {
+  --accent-color: #0B8A63;
+  --accent-bg-color: #0FA97B;
+  --accent-fg-color: #FFFFFF;
+}

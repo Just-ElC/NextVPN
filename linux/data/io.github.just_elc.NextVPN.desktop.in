@@ -1,0 +1,29 @@
+[Desktop Entry]
+Type=Application
+Name=NextVPN
+GenericName=VPN
+Comment=Free internet in one click
+Comment[ru]=Свободный интернет в один клик
+Exec=@EXEC@
+Icon=io.github.just_elc.NextVPN
+Terminal=false
+StartupNotify=true
+Categories=Network;GTK;
+Keywords=vpn;proxy;psiphon;censorship;tunnel;
+Keywords[ru]=vpn;впн;прокси;блокировки;туннель;psiphon;
+Actions=connect;disconnect;quit;
+
+[Desktop Action connect]
+Name=Connect
+Name[ru]=Подключить
+Exec=@EXEC@ --connect
+
+[Desktop Action disconnect]
+Name=Disconnect
+Name[ru]=Отключить
+Exec=@EXEC@ --disconnect
+
+[Desktop Action quit]
+Name=Quit
+Name[ru]=Выйти
+Exec=@EXEC@ --quit

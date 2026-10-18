@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.just_elc.NextVPN</id>
+  <metadata_license>CC0-1.0</metadata_license>
+
+  <name>NextVPN</name>
+  <summary>Free internet in one click</summary>
+  <summary xml:lang="ru">Свободный интернет в один клик</summary>
+
+  <developer id="io.github.just_elc">
+    <name>NextOS</name>
+  </developer>
+
+  <description>
+    <p>
+      One button, no accounts, no subscription and no traffic limits. NextVPN finds a route
+      that works on your network and points your desktop at it.
+    </p>
+    <p xml:lang="ru">
+      Одна кнопка, без регистрации, без подписки и без ограничений по трафику. NextVPN находит
+      маршрут, который работает в вашей сети, и направляет через него рабочий стол.
+    </p>
+    <ul>
+      <li>Choose the exit country, or let the engine pick the fastest</li>
+      <li xml:lang="ru">Выбор страны выхода или самая быстрая автоматически</li>
+      <li>Sets the GNOME and KDE system proxy while connected and restores yours afterwards</li>
+      <li xml:lang="ru">Включает системный прокси GNOME и KDE на время подключения и возвращает ваш после</li>
+      <li>Lives in the notification area and can start when you sign in</li>
+      <li xml:lang="ru">Живёт в области уведомлений и может запускаться при входе в систему</li>
+      <li>Light and dark style, follows the desktop</li>
+      <li xml:lang="ru">Светлая и тёмная тема, подстраивается под систему</li>
+    </ul>
+    <p>
+      Runs on the open psiphon-tunnel-core engine (GPLv3) and uses the same server network as
+      NextVPN for Windows. NextVPN is an independent application and is not affiliated with
+      Psiphon Inc.
+    </p>
+    <p xml:lang="ru">
+      Работает на открытом движке psiphon-tunnel-core (GPLv3) и использует ту же сеть серверов,
+      что и NextVPN для Windows. NextVPN — независимое приложение, не связанное с Psiphon Inc.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.just_elc.NextVPN.desktop</launchable>
+  <provides>
+    <binary>nextvpn</binary>
+  </provides>
+
+  <url type="homepage">https://github.com/Just-ElC/NextVPN</url>
+  <url type="bugtracker">https://github.com/Just-ElC/NextVPN/issues</url>
+  <url type="vcs-browser">https://github.com/Just-ElC/NextVPN</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Connected, light style</caption>
+      <image>https://raw.githubusercontent.com/Just-ElC/NextVPN/main/.github/screenshot-linux-light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Connected, dark style</caption>
+      <image>https://raw.githubusercontent.com/Just-ElC/NextVPN/main/.github/screenshot-linux-dark.png</image>
+    </screenshot>
+  </screenshots>
+
+  <categories>
+    <category>Network</category>
+  </categories>
+  <keywords>
+    <keyword>vpn</keyword>
+    <keyword>proxy</keyword>
+    <keyword>psiphon</keyword>
+    <keyword>censorship</keyword>
+  </keywords>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="1.0.0" date="2026-10-18">
+      <description>
+        <p>First release for Linux: GTK 4 and libadwaita, the same servers and features as the Windows build.</p>
+      </description>
+    </release>
+  </releases>
+</component>

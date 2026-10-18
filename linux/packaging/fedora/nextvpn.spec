@@ -1,0 +1,74 @@
+# NextVPN for Fedora. Build it from a checkout with:
+#
+#   linux/packaging/fedora/build-rpm.sh
+#
+# The bundled engine is the official static, UPX-packed Psiphon build: there is
+# nothing in it to split into debuginfo, and strip would damage it.
+%global debug_package %{nil}
+%global __strip /bin/true
+%global app_id io.github.just_elc.NextVPN
+
+Name:           nextvpn
+Version:        1.0.0
+Release:        1%{?dist}
+Summary:        Free internet in one click: a GTK client for the Psiphon network
+
+# The bundled engine is GPL-3.0-only. NextVPN's own code has no licence declared
+# in the repository yet; add it here ("<licence> AND GPL-3.0-only") once it does.
+License:        GPL-3.0-only
+URL:            https://github.com/Just-ElC/NextVPN
+Source0:        NextVPN-%{version}-linux.tar.gz
+
+# The bundled engine binary is x86_64 only. For other architectures, build it
+# with linux/tools/build-engine.sh first.
+ExclusiveArch:  x86_64
+
+BuildRequires:  meson >= 0.62
+BuildRequires:  gettext
+BuildRequires:  python3
+BuildRequires:  desktop-file-utils
+BuildRequires:  appstream
+BuildRequires:  gtk4-devel
+BuildRequires:  glib2-devel
+
+Requires:       python3
+Requires:       python3-gobject
+Requires:       python3-cairo
+Requires:       gtk4
+Requires:       libadwaita >= 1.4
+Requires:       gsettings-desktop-schemas
+Requires:       hicolor-icon-theme
+
+%description
+NextVPN for Linux. One button, no accounts, no subscription and no traffic
+limits. Runs on the psiphon-tunnel-core engine and uses the same server network
+as NextVPN for Windows. Sets the GNOME and KDE system proxy while connected and
+puts the previous settings back afterwards.
+
+%prep
+%autosetup -n NextVPN-%{version}
+
+%build
+%meson -Dpython3=/usr/bin/python3
+%meson_build
+
+%install
+%meson_install
+%find_lang %{name}
+
+%check
+%meson_test
+
+%files -f %{name}.lang
+%doc README.md
+%{_bindir}/nextvpn
+%{_libexecdir}/nextvpn/
+%{_datadir}/nextvpn/
+%{_datadir}/applications/%{app_id}.desktop
+%{_datadir}/metainfo/%{app_id}.metainfo.xml
+%{_datadir}/icons/hicolor/*/apps/%{app_id}.*
+%{_datadir}/icons/hicolor/scalable/status/nextvpn-tray-*.svg
+
+%changelog
+* Sun Oct 18 2026 NextOS - 1.0.0-1
+- First release for Linux

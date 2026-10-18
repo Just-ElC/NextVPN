@@ -1,0 +1,16 @@
+option('engine',
+  type: 'string',
+  value: 'bundled',
+  description: 'Tunnel engine: "bundled" installs linux/engine/psiphon-tunnel-core-<cpu>, '
+             + '"path" uses psiphon-tunnel-core from PATH at run time, '
+             + 'anything else is an absolute path to an engine binary that is used where it is')
+option('python3',
+  type: 'string',
+  value: 'python3',
+  description: 'Python interpreter the launcher runs with, by name or absolute path. '
+             + 'Packages should pass /usr/bin/python3: on distributions that merged '
+             + 'sbin into bin, a PATH lookup can return /usr/sbin/python3 instead')
+option('tests',
+  type: 'boolean',
+  value: true,
+  description: 'Register the unit tests with meson test')
