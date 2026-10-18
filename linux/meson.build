@@ -14,7 +14,7 @@ gnome = import('gnome')
 fs = import('fs')
 
 app_id = 'io.github.just_elc.NextVPN'
-py = python.find_installation('python3')
+py = python.find_installation(get_option('python3'))
 
 prefix = get_option('prefix')
 bindir = prefix / get_option('bindir')

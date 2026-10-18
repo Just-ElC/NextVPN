@@ -49,7 +49,7 @@ puts the previous settings back afterwards.
 %autosetup -n NextVPN-%{version}
 
 %build
-%meson
+%meson -Dpython3=/usr/bin/python3
 %meson_build
 
 %install

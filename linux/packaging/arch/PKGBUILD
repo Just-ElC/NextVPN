@@ -31,7 +31,7 @@ options=('!strip' '!debug')
 _root="$(cd "$startdir/../../.." && pwd)"
 
 build() {
-  arch-meson "$_root" build
+  arch-meson "$_root" build -Dpython3=/usr/bin/python3
   meson compile -C build
 }
 

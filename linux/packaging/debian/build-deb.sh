@@ -13,7 +13,7 @@ out=$(cd "${1:-.}" && pwd)
 work=$(mktemp -d)
 trap 'rm -rf -- "$work"' EXIT
 
-meson setup "$work/build" "$root" --prefix=/usr --buildtype=plain -Dtests=false
+meson setup "$work/build" "$root" --prefix=/usr --buildtype=plain -Dtests=false -Dpython3=/usr/bin/python3
 meson compile -C "$work/build"
 DESTDIR="$work/root" meson install -C "$work/build" --quiet
 
