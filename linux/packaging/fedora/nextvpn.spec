@@ -17,7 +17,7 @@ Summary:        Free internet in one click: a GTK client for the Psiphon network
 # in the repository yet; add it here ("<licence> AND GPL-3.0-only") once it does.
 License:        GPL-3.0-only
 URL:            https://github.com/Just-ElC/NextVPN
-Source0:        NextVPN-%{version}.tar.gz
+Source0:        NextVPN-%{version}-linux.tar.gz
 
 # The bundled engine binary is x86_64 only. For other architectures, build it
 # with linux/tools/build-engine.sh first.
@@ -60,7 +60,7 @@ puts the previous settings back afterwards.
 %meson_test
 
 %files -f %{name}.lang
-%doc README.md linux/engine/README.md
+%doc README.md
 %{_bindir}/nextvpn
 %{_libexecdir}/nextvpn/
 %{_datadir}/nextvpn/

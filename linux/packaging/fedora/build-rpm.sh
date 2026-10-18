@@ -7,15 +7,11 @@
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
-root=$(cd "$here/../../.." && pwd)
 version=$(sed -n 's/^Version: *//p' "$here/nextvpn.spec")
 top=$(rpm --eval '%{_topdir}')
 
 mkdir -p "$top/SOURCES" "$top/SPECS"
-# The working tree as it is, committed or not, so a local change can be tested.
-tar -C "$root/.." --transform "s|^$(basename "$root")|NextVPN-$version|" \
-    --exclude-vcs --exclude='__pycache__' --exclude='_build' \
-    -czf "$top/SOURCES/NextVPN-$version.tar.gz" "$(basename "$root")"
+"$here/../make-tarball.sh" "$top/SOURCES" >/dev/null
 cp "$here/nextvpn.spec" "$top/SPECS/"
 
 rpmbuild -ba "$top/SPECS/nextvpn.spec"

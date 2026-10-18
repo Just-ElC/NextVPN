@@ -104,12 +104,13 @@
 Системный прокси включается в GNOME и KDE Plasma. Подробности — в
 [linux/README.md](linux/README.md).
 
-| Система | Как установить |
-|---|---|
-| **Fedora** | `linux/packaging/fedora/build-rpm.sh`, затем `sudo dnf install ~/rpmbuild/RPMS/x86_64/nextvpn-*.rpm` |
-| **CachyOS, Arch, Manjaro** | `cd linux/packaging/arch && makepkg -si` |
-| **NixOS** | `nix run github:Just-ElC/NextVPN` или модуль `programs.nextvpn.enable = true` |
-| **Ubuntu, Debian и другие** | `linux/install.sh --deps && linux/install.sh` — в домашнюю папку, без прав администратора |
+| Система | Скачать | Установить |
+|---|---|---|
+| **Fedora** 40+ | [nextvpn-1.0.0-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn-1.0.0-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.0.0-1.x86_64.rpm` |
+| **CachyOS, Arch, Manjaro** | [nextvpn-1.0.0-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn-1.0.0-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.0.0-1-x86_64.pkg.tar.zst` |
+| **Ubuntu** 24.04+, **Debian** 13+ | [nextvpn_1.0.0-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn_1.0.0-1_amd64.deb) | `sudo apt install ./nextvpn_1.0.0-1_amd64.deb` |
+| **NixOS** | — | `nix run github:Just-ElC/NextVPN` или модуль `programs.nextvpn.enable = true` |
+| Другие | [NextVPN-1.0.0-linux.tar.gz](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/NextVPN-1.0.0-linux.tar.gz) | распаковать, затем `linux/install.sh --deps && linux/install.sh` |
 
 ---
 

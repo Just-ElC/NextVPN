@@ -24,6 +24,18 @@ Windows-версия (`Windows_<версия>_NextVPN`), и получает о�
 
 ## Установка
 
+### Готовые пакеты
+
+Из [релиза для Linux](https://github.com/Just-ElC/NextVPN/releases/tag/v1.0.0-linux):
+
+| Система | Файл | Команда |
+|---|---|---|
+| Fedora 40+ | [nextvpn-1.0.0-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn-1.0.0-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.0.0-1.x86_64.rpm` |
+| CachyOS, Arch, EndeavourOS, Manjaro | [nextvpn-1.0.0-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn-1.0.0-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.0.0-1-x86_64.pkg.tar.zst` |
+| Ubuntu 24.04+, Debian 13+, Mint 22+ | [nextvpn_1.0.0-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn_1.0.0-1_amd64.deb) | `sudo apt install ./nextvpn_1.0.0-1_amd64.deb` |
+
+Ниже — как собрать то же самое из исходников.
+
 ### Fedora
 
 ```sh
@@ -70,7 +82,15 @@ nix run github:Just-ElC/NextVPN
 `nextvpn.overlays.default`. На aarch64 движок собирается из исходников той же
 ревизии.
 
-### Любой другой дистрибутив (Ubuntu, Debian, openSUSE…)
+### Ubuntu, Debian
+
+```sh
+sudo apt install meson gettext dpkg-dev
+linux/packaging/debian/build-deb.sh
+sudo apt install ./nextvpn_1.0.0-1_amd64.deb
+```
+
+### Любой другой дистрибутив (openSUSE и т.д.)
 
 ```sh
 linux/install.sh --deps     # поставить недостающие пакеты (спросит sudo)
@@ -157,7 +177,10 @@ meson setup _build && meson test -C _build    # то же через meson, с �
 ```
 
 Тесты движка используют фейковый движок с тем же протоколом. С настоящим:
-`NEXTVPN_REAL_ENGINE_TEST=1`. Тесты трея и view-model проверяют D-Bus и нужно
+`NEXTVPN_REAL_ENGINE_TEST=1`. Настоящее подключение к сети Psiphon с запросом
+через туннель: `python3 linux/tools/connect-check.py`. CI
+(`.github/workflows/linux.yml`) делает всё это на каждом PR, собирает пакеты для
+всех дистрибутивов, а по тегу `v*-linux` публикует их релизом. Тесты трея и view-model проверяют D-Bus и нужно
 запускать под `dbus-run-session`.
 
 | Каталог | |
@@ -166,7 +189,8 @@ meson setup _build && meson test -C _build    # то же через meson, с �
 | `nextvpn/ui/` | интерфейс на GTK 4 / libadwaita, трей, уведомления |
 | `engine/` | Linux-сборка движка (общие `base.config` и `server_list.dat` — в `/engine`) |
 | `po/` | переводы |
-| `packaging/` | Fedora, Arch, Nix |
+| `packaging/` | Fedora, Arch, Debian, Nix, архив исходников, заметки к релизу |
+| `tools/` | сборка движка из исходников, проверка подключения к сети Psiphon |
 
 Переменные окружения: `NEXTVPN_ENGINE` — путь к другому движку,
 `NEXTVPN_ENGINE_DIR` — каталог с другими `base.config` и `server_list.dat`.
