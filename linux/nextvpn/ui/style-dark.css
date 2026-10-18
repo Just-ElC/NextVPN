@@ -1,0 +1,9 @@
+/* Dark-theme overrides for the colours in style.css. */
+
+@define-color brand_primary #2EE6A8;
+@define-color brand_secondary #12B886;
+@define-color brand_ink #04140E;
+@define-color state_warn #F2B441;
+@define-color state_bad #FF6B6B;
+@define-color state_idle #8A8F98;
+@define-color graph_up #5AB9FF;

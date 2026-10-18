@@ -4,6 +4,13 @@ obj/
 build/
 dist/
 TestResults/
+_build/
+result
+result-*
+
+# Python
+__pycache__/
+*.pyc
 
 # The generated runtime config and datastore live in %LOCALAPPDATA%, never here,
 # but a stray copy next to the sources should not be committed either.

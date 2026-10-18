@@ -1,0 +1,4 @@
+/* Brand accent for libadwaita before 1.6, which reads named colours. */
+@define-color accent_color #0B8A63;
+@define-color accent_bg_color #0FA97B;
+@define-color accent_fg_color #FFFFFF;

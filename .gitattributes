@@ -10,6 +10,16 @@
 engine/server_list.dat binary
 engine/base.config     binary
 
+# Linux: the engine is a binary, and scripts must keep LF line endings even in a
+# Windows checkout, or they stop running once copied to a Linux machine.
+linux/engine/psiphon-tunnel-core-* binary
+*.sh          text eol=lf
+*.in          text eol=lf
+PKGBUILD      text eol=lf
+*.spec        text eol=lf
+*.nix         text eol=lf
+*.py          text eol=lf
+
 *.exe binary
 *.dll binary
 *.ico binary

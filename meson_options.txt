@@ -1,0 +1,10 @@
+option('engine',
+  type: 'string',
+  value: 'bundled',
+  description: 'Tunnel engine: "bundled" installs linux/engine/psiphon-tunnel-core-<cpu>, '
+             + '"path" uses psiphon-tunnel-core from PATH at run time, '
+             + 'anything else is an absolute path to an engine binary that is used where it is')
+option('tests',
+  type: 'boolean',
+  value: true,
+  description: 'Register the unit tests with meson test')
