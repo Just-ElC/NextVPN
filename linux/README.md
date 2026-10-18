@@ -180,7 +180,8 @@ meson setup _build && meson test -C _build    # то же через meson, с �
 `NEXTVPN_REAL_ENGINE_TEST=1`. Настоящее подключение к сети Psiphon с запросом
 через туннель: `python3 linux/tools/connect-check.py`. CI
 (`.github/workflows/linux.yml`) делает всё это на каждом PR, собирает пакеты для
-всех дистрибутивов, а по тегу `v*-linux` публикует их релизом. Тесты трея и view-model проверяют D-Bus и нужно
+всех дистрибутивов, а по тегу `v*-linux` или при ручном запуске с параметром
+`release_tag` публикует их релизом (во втором случае workflow сам создаёт тег). Тесты трея и view-model проверяют D-Bus и нужно
 запускать под `dbus-run-session`.
 
 | Каталог | |
