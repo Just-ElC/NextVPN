@@ -26,7 +26,8 @@ Architecture: amd64
 Maintainer: NextOS <https://github.com/Just-ElC/NextVPN/issues>
 Installed-Size: $size
 Depends: python3 (>= 3.10), python3-gi, python3-gi-cairo, python3-cairo, gir1.2-gtk-4.0, gir1.2-adw-1 (>= 1.4), gsettings-desktop-schemas, iproute2
-Recommends: network-manager, dconf-gsettings-backend | gsettings-backend
+Recommends: dconf-gsettings-backend | gsettings-backend
+Suggests: network-manager
 Section: net
 Priority: optional
 Homepage: https://github.com/Just-ElC/NextVPN
