@@ -694,8 +694,8 @@ msgstr "NetworkManager не смог создать VPN-интерфейс: {det
 msgid "NetworkManager could not bring the VPN interface up: {detail}"
 msgstr "NetworkManager не смог включить VPN-интерфейс: {detail}"
 
-msgid "NetworkManager allows this without a password only to the user of an active desktop session. Sign in to the desktop, or switch Settings → System to the system proxy."
-msgstr "Без пароля NetworkManager разрешает это только пользователю активного сеанса рабочего стола. Войдите в рабочий стол или переключите «Настройки → Система» на системный прокси."
+msgid "NetworkManager allows this without a password only to the user of an active desktop session. Sign in to the desktop, or switch Settings → Connection to the system proxy."
+msgstr "Без пароля NetworkManager разрешает это только пользователю активного сеанса рабочего стола. Войдите в рабочий стол или переключите «Настройки → Подключение» на системный прокси."
 
 msgid "Slow to connect through {country}. “Best performance” has many more servers to try."
 msgstr "Долго подключается через страну «{country}». У варианта «Самая быстрая» серверов намного больше."

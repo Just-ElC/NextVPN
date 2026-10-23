@@ -451,7 +451,7 @@ def vpn_failure_text(n: Notice) -> str:
         text = n.message
     if n.data.get("denied") is True:
         text += " " + _("NetworkManager allows this without a password only to the user of an active "
-                        "desktop session. Sign in to the desktop, or switch Settings → System to the "
+                        "desktop session. Sign in to the desktop, or switch Settings → Connection to the "
                         "system proxy.")
     return text
 

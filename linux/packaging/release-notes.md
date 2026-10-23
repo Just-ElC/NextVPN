@@ -43,7 +43,7 @@
   Windows-версии.
 - Режиму VPN нужен NetworkManager. Он есть в Fedora, CachyOS, Ubuntu и на
   большинстве десктопов NixOS (`networking.networkmanager.enable`). Режим
-  переключается в «Настройки → Система».
+  переключается в «Настройки → Подключение».
 - В **GNOME** значок в трее появится только с расширением AppIndicator
   (`gnome-shell-extension-appindicator`).
 - Сборки для x86_64. Для aarch64 используйте flake (`nix run`) или соберите

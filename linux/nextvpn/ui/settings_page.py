@@ -80,6 +80,13 @@ class SettingsPage(Adw.PreferencesPage):
         self.region_row.set_activatable_widget(self.region_button)
         group.add(self.region_row)
 
+        self.mode_row = Adw.ComboRow(
+            title=_("What goes through the tunnel"),
+            model=Gtk.StringList.new([_("Everything (VPN)"), _("Programs that use the system proxy")]))
+        self.mode_row.set_selected(0 if self.settings.connection_mode == ConnectionMode.VPN else 1)
+        self.mode_row.connect("notify::selected", self._on_mode)
+        group.add(self.mode_row)
+
         self._switch(group, _("Split tunnelling"),
                      _("Send traffic bound for your own country straight out, bypassing the tunnel. Local "
                        "banking and streaming keep working, but those connections are not hidden."),
@@ -127,14 +134,6 @@ class SettingsPage(Adw.PreferencesPage):
 
     def _build_system(self):
         group = Adw.PreferencesGroup(title=_("System"))
-
-        self.mode_row = Adw.ComboRow(
-            title=_("What goes through the tunnel"),
-            model=Gtk.StringList.new([_("Everything (VPN)"), _("Programs that use the system proxy")]))
-        self.mode_row.set_selected(0 if self.settings.connection_mode == ConnectionMode.VPN else 1)
-        self.mode_row.connect("notify::selected", self._on_mode)
-        group.add(self.mode_row)
-
         self.proxy_row = self._switch(
             group, _("Set the system proxy"), "", "set_system_proxy", self._local_changed)
 
