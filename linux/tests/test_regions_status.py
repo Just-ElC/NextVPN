@@ -106,3 +106,25 @@ class StatusPresenterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmbeddedRegionTests(unittest.TestCase):
+    def test_the_shipped_server_list_offers_its_countries_before_the_engine_runs(self):
+        from nextvpn.core import paths
+        from nextvpn.core.regions import embedded_regions
+        codes = embedded_regions(paths.engine().server_list)
+        self.assertGreaterEqual(len(codes), 10)
+        for code in ("DE", "NL", "US"):
+            self.assertIn(code, codes)
+        self.assertEqual(sorted(codes), codes)
+
+    def test_garbage_and_missing_files_give_nothing_rather_than_an_error(self):
+        import binascii
+        import tempfile
+        from pathlib import Path
+        from nextvpn.core.regions import embedded_regions
+        with tempfile.TemporaryDirectory() as d:
+            good = binascii.hexlify(b'0 0 0 0 {"region":"fi","ipAddress":"192.0.2.1"}')
+            Path(d, "list").write_bytes(b"zz\n" + good + b"\n\n" + binascii.hexlify(b"0 0 0 0 [1]") + b"\n")
+            self.assertEqual(["FI"], embedded_regions(Path(d, "list")))
+            self.assertEqual([], embedded_regions(Path(d, "missing")))

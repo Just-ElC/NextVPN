@@ -40,6 +40,9 @@ class NoticeType:
     INFO = "Info"
     WARNING = "Warning"
     ERROR = "Error"
+    # Added by vpn_helper, in the engine's own format.
+    VPN_UP = "VpnUp"
+    VPN_SETUP_FAILED = "VpnSetupFailed"
 
 
 def _parse_timestamp(text) -> datetime | None:

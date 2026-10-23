@@ -115,8 +115,25 @@ class TrayTests(unittest.TestCase):
 
     # -------------------------------------------------------------- tests
 
+    def with_icons_installed(self, installed: bool):
+        """Points the data directories at a fresh tree, with or without our icons in it."""
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        if installed:
+            status = Path(tmp.name, "share", "icons", "hicolor", "scalable", "status")
+            status.mkdir(parents=True)
+            (status / "nextvpn-tray-disconnected.svg").write_text("<svg/>")
+        patcher = mock.patch.dict(os.environ, {"XDG_DATA_HOME": str(Path(tmp.name, "home")),
+                                               "XDG_DATA_DIRS": str(Path(tmp.name, "share"))})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_the_icon_registers_and_reports_itself(self):
         from nextvpn.core.status import TunnelState
+        self.with_icons_installed(True)
         tray = self.TrayIcon()
         try:
             self.spin_until(lambda: self.registered)
@@ -133,6 +150,21 @@ class TrayTests(unittest.TestCase):
             self.assertEqual("Traffic is exiting through Germany", values["ToolTip"][3])
             sizes = [(w, h, len(data)) for w, h, data in values["IconPixmap"]]
             self.assertIn((22, 22, 22 * 22 * 4), sizes)
+        finally:
+            tray.dispose()
+
+    def test_without_shared_icons_the_host_is_given_only_the_pixmap(self):
+        # quickshell (caelestia, most Hyprland shells) looks a name up in its
+        # own theme only and shows nothing when that fails, so with `nix run`
+        # or a checkout the name must be empty for it to fall back to pixels.
+        self.with_icons_installed(False)
+        tray = self.TrayIcon()
+        try:
+            self.spin_until(lambda: self.registered)
+            service = self.registered[0][1]
+            values = self.as_host(lambda c: {n: self.prop(c, service, n) for n in ("IconName", "IconPixmap")})
+            self.assertEqual("", values["IconName"])
+            self.assertTrue(values["IconPixmap"])
         finally:
             tray.dispose()
 

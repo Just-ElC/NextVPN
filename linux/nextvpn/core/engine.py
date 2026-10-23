@@ -16,17 +16,18 @@ import ctypes
 import os
 import signal
 import subprocess
+import sys
 import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from . import paths, tunnel_config
+from . import paths, tunnel_config, vpn
 from .i18n import _
 from .notice import Notice, NoticeType
 from .policy import NoticePolicy
-from .settings import AppSettings
+from .settings import AppSettings, ConnectionMode
 from .status import TunnelState
 from .telemetry import TelemetrySignal, TunnelTelemetry
 
@@ -80,15 +81,30 @@ class EngineOutput:
 class TunnelEngine:
     #: How long a stop waits for a graceful exit before killing the engine.
     STOP_GRACE_SECONDS = 5.0
+    #: In VPN mode the helper also has to hand the tun back to NetworkManager.
+    VPN_STOP_GRACE_SECONDS = 12.0
     #: Non-notice stderr lines forwarded to the log per run; a panic is long.
     MAX_RAW_LINES = 40
 
     def __init__(self, post: Callable = glib_post,
                  engine_paths: Callable[[], paths.EnginePaths] = paths.engine,
-                 write_config: Callable[[AppSettings, paths.EnginePaths], Path] = tunnel_config.write):
+                 write_config: Callable[..., Path] = tunnel_config.write,
+                 vpn_available: Callable[[], bool] = vpn.available,
+                 vpn_helper: list[str] | None = None):
         self._post = post
         self._engine_paths = engine_paths
         self._write_config = write_config
+        self._vpn_available = vpn_available
+        #: What VPN mode runs in place of the engine; the engine's command line follows "--".
+        self._vpn_helper = vpn_helper or [sys.executable, "-m", "nextvpn.core.vpn_helper"]
+        #: Whether the current or last run is in VPN mode.
+        self.vpn_mode = False
+        #: Set when VPN mode was asked for and NetworkManager was not there.
+        self.vpn_unavailable = False
+        self._setup_error: str | None = None
+        #: Held while stale VPN profiles are removed, so a helper being started
+        #: never has its own fresh profile removed from under it.
+        self._vpn_lock = threading.Lock()
 
         self.telemetry = TunnelTelemetry()
         self.state = TunnelState.DISCONNECTED
@@ -147,16 +163,25 @@ class TunnelEngine:
             self._fault(_("Embedded server list not found at {path}").format(path=engine.server_list))
             return
 
+        wants_vpn = settings.connection_mode == ConnectionMode.VPN
+        use_vpn = wants_vpn and self._vpn_available()
+        self.vpn_unavailable = wants_vpn and not use_vpn
+
         try:
-            config_path = self._write_config(settings, engine)
+            if use_vpn:
+                config_path = self._write_config(settings, engine, packet_tunnel=True)
+            else:
+                config_path = self._write_config(settings, engine)
         except (OSError, ValueError) as ex:
             self._fault(_("Could not prepare tunnel configuration: {error}").format(error=ex))
             return
 
+        self.vpn_mode = use_vpn
         self.telemetry.reset()
         self._stop_requested = False
         self._last_error = None
         self._first_raw = None
+        self._setup_error = None
         self._set_state(TunnelState.CONNECTING)
 
         # An engine left behind by a previous hard kill still holds the datastore
@@ -178,26 +203,24 @@ class TunnelEngine:
 
         argv = [str(engine.binary), "--config", str(config_path),
                 "--serverList", str(engine.server_list)]
+        env = None
+        if use_vpn:
+            # The helper sets the tun up, runs the engine on it and takes the tun
+            # down again however the session ends. See vpn_helper.
+            argv = [*self._vpn_helper, "--", *argv]
+            env = dict(os.environ)
+            env["PYTHONPATH"] = os.pathsep.join(
+                p for p in (str(paths.PACKAGE_DIR.parent), env.get("PYTHONPATH")) if p)
         try:
-            proc = subprocess.Popen(
-                argv,
-                cwd=str(config_path.parent),
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                preexec_fn=child_setup,
-                # Its own session: a Ctrl+C in the terminal that launched the app
-                # is the app's to handle, not something to deliver to the engine.
-                start_new_session=True,
-                close_fds=True,
-            )
+            with self._vpn_lock:
+                proc = self._spawn(argv, env, config_path, child_setup)
+                self._process = proc
         except OSError as ex:
             self._fault(_("Could not start the tunnel engine: {error}").format(error=ex.strerror or ex))
             return
 
         self._generation += 1
         generation = self._generation
-        self._process = proc
 
         # Notices are newline-delimited JSON on stderr; stdout is drained so a
         # full pipe buffer can never stall the engine.
@@ -209,6 +232,35 @@ class TunnelEngine:
         drain.start()
         threading.Thread(target=self._watch_exit, args=(proc, generation, (pump, drain)),
                          name="nextvpn-exit", daemon=True).start()
+
+    @staticmethod
+    def _spawn(argv, env, config_path: Path, child_setup) -> subprocess.Popen:
+        return subprocess.Popen(
+            argv,
+            env=env,
+            cwd=str(config_path.parent),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            preexec_fn=child_setup,
+            # Its own session: a Ctrl+C in the terminal that launched the app
+            # is the app's to handle, not something to deliver to the engine.
+            start_new_session=True,
+            close_fds=True,
+        )
+
+    def recover_vpn(self) -> None:
+        """
+        Removes, in the background, a VPN interface no helper is attached to any
+        more: left by a killed session, it would hold every connection on the
+        machine. Does nothing while an engine runs, since its helper owns it.
+        """
+        def work():
+            with self._vpn_lock:
+                if self._process is None and vpn.nmcli_path() is not None:
+                    vpn.cleanup()
+
+        threading.Thread(target=work, name="nextvpn-vpn-cleanup", daemon=True).start()
 
     # ----------------------------------------------------------------- stop
 
@@ -239,7 +291,8 @@ class TunnelEngine:
         # SIGTERM. Anything that ignores it for longer than the grace period is
         # killed: the BoltDB datastore is transactional and survives that.
         _send(proc, signal.SIGTERM)
-        threading.Thread(target=_reap_or_kill, args=(proc, self.STOP_GRACE_SECONDS),
+        grace = self.VPN_STOP_GRACE_SECONDS if self.vpn_mode else self.STOP_GRACE_SECONDS
+        threading.Thread(target=_reap_or_kill, args=(proc, grace),
                          name="nextvpn-stop", daemon=True).start()
 
     def shutdown(self, timeout: float = 3.0) -> None:
@@ -251,6 +304,8 @@ class TunnelEngine:
         if proc is None:
             return
         self._stop_requested = True
+        if self.vpn_mode:
+            timeout = max(timeout, self.VPN_STOP_GRACE_SECONDS)
         if proc.poll() is None:
             _send(proc, signal.SIGTERM)
             try:
@@ -306,6 +361,8 @@ class TunnelEngine:
 
         if n.type == NoticeType.ERROR:
             self._last_error = n.message
+        elif n.type == NoticeType.VPN_SETUP_FAILED:
+            self._setup_error = vpn_failure_text(n)
 
         signal_ = self.telemetry.apply(n)
 
@@ -339,6 +396,10 @@ class TunnelEngine:
         # the last screenful of numbers does not blank out on disconnect.
         self.telemetry.clear_listeners()
 
+        if self.vpn_mode and code < 0:
+            # The helper was killed before it could hand the tun back.
+            self.recover_vpn()
+
         restart = self._restart_with
         self._restart_with = None
         if restart is not None:
@@ -347,6 +408,10 @@ class TunnelEngine:
 
         if self._stop_requested:
             self._set_state(TunnelState.DISCONNECTED)
+            return
+
+        if self._setup_error:
+            self._set_state(TunnelState.FAULTED, self._setup_error)
             return
 
         reason = self._last_error or self._first_raw
@@ -369,6 +434,27 @@ class TunnelEngine:
 
 
 # ------------------------------------------------------------------ helpers
+
+def vpn_failure_text(n: Notice) -> str:
+    """What vpn_helper reported, worded for the user."""
+    step = n.string("step") or ""
+    detail = n.string("detail") or ""
+    if step == "route":
+        text = _("No network connection: this machine has no route to the internet.")
+    elif step == "create":
+        text = _("NetworkManager could not create the VPN interface: {detail}").format(detail=detail)
+    elif step == "activate":
+        text = _("NetworkManager could not bring the VPN interface up: {detail}").format(detail=detail)
+    elif step == "engine":
+        text = _("Could not start the tunnel engine: {error}").format(error=detail)
+    else:
+        text = n.message
+    if n.data.get("denied") is True:
+        text += " " + _("NetworkManager allows this without a password only to the user of an active "
+                        "desktop session. Sign in to the desktop, or switch Settings → Connection to the "
+                        "system proxy.")
+    return text
+
 
 def _send(proc: subprocess.Popen, sig: int) -> None:
     try:

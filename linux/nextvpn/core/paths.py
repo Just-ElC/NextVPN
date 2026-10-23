@@ -97,6 +97,27 @@ def icons_dir() -> Path | None:
     return candidate if candidate.is_dir() else None
 
 
+def shared_icon_exists(name: str, context: str = "status") -> bool:
+    """
+    Whether an icon by this name is installed where other programs look for
+    icons: the user's and the system's data directories, NixOS profiles
+    included. A tray host is a separate program with its own environment, so
+    directories only this process was pointed at (a Nix store path added by the
+    launcher wrapper, or this source checkout) do not count.
+    """
+    dirs = [str(_xdg("XDG_DATA_HOME", ".local/share"))]
+    dirs += (os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":")
+    for d in dirs:
+        if not d or d.startswith("/nix/store/"):
+            continue
+        root = Path(d) / "icons" / "hicolor"
+        if (root / "scalable" / context / f"{name}.svg").is_file():
+            return True
+        if any(root.glob(f"*/{context}/{name}.png")):
+            return True
+    return False
+
+
 def css_dir() -> Path:
     return PACKAGE_DIR / "ui"
 

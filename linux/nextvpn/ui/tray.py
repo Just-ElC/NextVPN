@@ -146,8 +146,8 @@ def _kind(state: TunnelState) -> str:
 def render_pixmap(kind: str, size: int) -> tuple[int, int, bytes]:
     """
     The tray icon drawn directly: a disc in the state colour with a power glyph.
-    Sent alongside the icon name, so the icon shows even where the host cannot
-    find our files in its icon theme. ARGB32 in network byte order, not
+    Always sent, and the only icon a host gets when ours are not installed where
+    it can find them by name. ARGB32 in network byte order, not
     premultiplied, as the protocol asks.
     """
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, size, size)
@@ -207,6 +207,11 @@ class TrayIcon(GObject.Object):
         self._watch_id = 0
         self._bus_name = f"org.kde.StatusNotifierItem-{os.getpid()}-1"
         self._pixmaps: dict[str, list] = {}
+        # Some hosts (quickshell, so caelestia and other Hyprland shells) look a
+        # named icon up only in their own theme and ignore IconThemePath. When
+        # the icons are not installed where they can see them, as with `nix run`
+        # or a source checkout, the name is left empty so they draw the pixmap.
+        self._use_names = paths.shared_icon_exists(ICON_NAMES["idle"])
 
         try:
             self._bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
@@ -324,6 +329,7 @@ class TrayIcon(GObject.Object):
     def _on_item_property(self, connection, sender, path, interface, name):
         kind = _kind(self._state)
         icons = paths.icons_dir()
+        icon_name = ICON_NAMES[kind] if self._use_names else ""
         values = {
             "Category": GLib.Variant("s", "ApplicationStatus"),
             "Id": GLib.Variant("s", "nextvpn"),
@@ -331,14 +337,14 @@ class TrayIcon(GObject.Object):
             "Status": GLib.Variant("s", "Active"),
             "WindowId": GLib.Variant("i", 0),
             "IconThemePath": GLib.Variant("s", str(icons) if icons else ""),
-            "IconName": GLib.Variant("s", ICON_NAMES[kind]),
+            "IconName": GLib.Variant("s", icon_name),
             "IconPixmap": GLib.Variant("a(iiay)", self._icon_pixmaps(kind)),
             "OverlayIconName": GLib.Variant("s", ""),
             "OverlayIconPixmap": GLib.Variant("a(iiay)", []),
             "AttentionIconName": GLib.Variant("s", ""),
             "AttentionIconPixmap": GLib.Variant("a(iiay)", []),
             "AttentionMovieName": GLib.Variant("s", ""),
-            "ToolTip": GLib.Variant("(sa(iiay)ss)", (ICON_NAMES[kind], [], APP_NAME, self._tooltip_body())),
+            "ToolTip": GLib.Variant("(sa(iiay)ss)", (icon_name, [], APP_NAME, self._tooltip_body())),
             "ItemIsMenu": GLib.Variant("b", False),
             "Menu": GLib.Variant("o", MENU_PATH),
         }

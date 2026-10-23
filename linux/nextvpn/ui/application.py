@@ -72,11 +72,15 @@ class NextVpnApplication(Adw.Application):
         theme.apply(settings.theme)
         settings.start_at_login = autostart.is_enabled()
 
-        # If a previous run was killed while connected, put the proxy back first.
+        # If a previous run was killed while connected, put the proxy back first,
+        # and take down a VPN interface nothing is attached to any more: it
+        # would hold every connection on this machine. Off the main loop, since
+        # it asks NetworkManager.
         proxy = SystemProxy()
         proxy.recover_if_stale()
 
         self.vm = MainViewModel(settings, proxy=proxy)
+        self.vm.engine.recover_vpn()
         self.notifier = Notifier(self)
         self.tray = TrayIcon()
         self.tray.connect("activate", lambda *_: self._toggle_window())

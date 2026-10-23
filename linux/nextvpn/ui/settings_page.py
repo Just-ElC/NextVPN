@@ -7,11 +7,11 @@ import threading
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from .. import VERSION
-from ..core import autostart, paths
+from ..core import autostart, paths, vpn
 from ..core.engine import engine_version
 from ..core.i18n import _
 from ..core.regions import TUNNEL_PROTOCOLS
-from ..core.settings import DEFAULT_BYPASS_LIST, AppTheme, ClientPlatform
+from ..core.settings import DEFAULT_BYPASS_LIST, AppTheme, ClientPlatform, ConnectionMode
 from ..core.system_proxy import GnomeBackend, KdeBackend
 from . import theme
 from .viewmodel import MainViewModel
@@ -26,6 +26,8 @@ class SettingsPage(Adw.PreferencesPage):
         self.tray = tray
         self._loading = True
         self._port_timer = 0
+        #: Whether NetworkManager is running; None until the first check returns.
+        self._vpn_available: bool | None = None
 
         self._build_connection()
         self._build_transports()
@@ -38,6 +40,7 @@ class SettingsPage(Adw.PreferencesPage):
         if tray is not None:
             tray.connect("availability-changed", lambda *_: self._refresh_tray())
         self.connect("map", lambda *_: self._sync_autostart())
+        self.connect("map", lambda *_: self._check_vpn())
         self._refresh()
         self._refresh_tray()
         self._loading = False
@@ -76,6 +79,13 @@ class SettingsPage(Adw.PreferencesPage):
         self.region_row.add_suffix(self.region_button)
         self.region_row.set_activatable_widget(self.region_button)
         group.add(self.region_row)
+
+        self.mode_row = Adw.ComboRow(
+            title=_("What goes through the tunnel"),
+            model=Gtk.StringList.new([_("Everything (VPN)"), _("Programs that use the system proxy")]))
+        self.mode_row.set_selected(0 if self.settings.connection_mode == ConnectionMode.VPN else 1)
+        self.mode_row.connect("notify::selected", self._on_mode)
+        group.add(self.mode_row)
 
         self._switch(group, _("Split tunnelling"),
                      _("Send traffic bound for your own country straight out, bypassing the tunnel. Local "
@@ -125,7 +135,7 @@ class SettingsPage(Adw.PreferencesPage):
     def _build_system(self):
         group = Adw.PreferencesGroup(title=_("System"))
         self.proxy_row = self._switch(
-            group, _("Route the whole desktop"), "", "set_system_proxy", self._local_changed)
+            group, _("Set the system proxy"), "", "set_system_proxy", self._local_changed)
 
         self.bypass_row = Adw.EntryRow(title=_("Hosts that go direct"),
                                        show_apply_button=True)
@@ -223,6 +233,21 @@ class SettingsPage(Adw.PreferencesPage):
         if self.region_button.get_label() != label:
             self.region_button.set_label(label)
 
+        vpn_mode = self.settings.connection_mode == ConnectionMode.VPN
+        if vpn_mode and self._vpn_available is False:
+            mode = _("NetworkManager was not found here, so connections fall back to the system proxy. "
+                     "Install and start NetworkManager to tunnel every program.")
+        elif vpn_mode:
+            mode = _("Every program, game and terminal goes through the tunnel, DNS included, on any desktop. "
+                     "NetworkManager sets up the VPN interface; no password is asked.")
+        else:
+            mode = _("Only programs that follow the GNOME or KDE proxy settings go through the tunnel, plus "
+                     "whatever you point at the local proxy yourself. Most programs on Hyprland, Sway and "
+                     "other window managers ignore it.")
+        self.mode_row.set_subtitle(mode)
+        for row in (self.proxy_row, self.bypass_row):
+            row.set_sensitive(not vpn_mode or self._vpn_available is False)
+
         found = []
         for backend in (GnomeBackend(), KdeBackend()):
             try:
@@ -248,6 +273,27 @@ class SettingsPage(Adw.PreferencesPage):
         else:
             self.tray_row.set_subtitle(_("No notification area was found on this desktop, so closing the window "
                                          "quits. On GNOME, install the AppIndicator extension."))
+
+    def _check_vpn(self):
+        def check():
+            found = vpn.available()
+            GLib.idle_add(done, found)
+
+        def done(found):
+            if found != self._vpn_available:
+                self._vpn_available = found
+                self._refresh()
+            return GLib.SOURCE_REMOVE
+
+        threading.Thread(target=check, daemon=True).start()
+
+    def _on_mode(self, row, _pspec):
+        if self._loading:
+            return
+        self.settings.connection_mode = ConnectionMode.VPN if row.get_selected() == 0 else ConnectionMode.PROXY
+        self._refresh()
+        self.vm.apply_tunnel_setting_change()
+        self.vm.notify_settings_changed()
 
     def _sync_autostart(self):
         # Keep the toggle honest if the entry was removed elsewhere.

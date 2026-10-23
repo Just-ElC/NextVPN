@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import binascii
+import json
 import locale
+import os
 from dataclasses import dataclass
 
 from .i18n import N_, _
@@ -117,3 +120,30 @@ TUNNEL_PROTOCOLS: tuple[TunnelProtocol, ...] = (
     TunnelProtocol("SHADOWSOCKS-OSSH", "Shadowsocks",
                    N_("Shadowsocks-shaped transport.")),
 )
+
+
+def embedded_regions(server_list: os.PathLike | str) -> list[str]:
+    """
+    The exit countries of the servers built into the app, read straight from the
+    embedded server list, so the picker is full from the very first launch,
+    before the engine has run once. Each line is a hex-encoded server entry:
+    four space-separated legacy fields followed by a JSON object.
+    """
+    found: set[str] = set()
+    try:
+        with open(server_list, "rb") as fh:
+            lines = fh.read().split(b"\n")
+    except OSError:
+        return []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(binascii.unhexlify(line).split(b" ", 4)[4])
+        except (ValueError, IndexError, binascii.Error):
+            continue
+        region = entry.get("region") if isinstance(entry, dict) else None
+        if isinstance(region, str) and len(region) == 2 and region.isalpha():
+            found.add(region.upper())
+    return sorted(found)

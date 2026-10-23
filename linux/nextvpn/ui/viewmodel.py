@@ -16,13 +16,13 @@ from datetime import datetime
 
 from gi.repository import GLib, GObject
 
-from ..core import fmt, system_proxy
+from ..core import fmt, paths, system_proxy
 from ..core.engine import EngineOutput, TunnelEngine
 from ..core.i18n import _
 from ..core.notice import Notice, NoticeType
 from ..core.policy import NoticeLevel, NoticePolicy
-from ..core.regions import RegionInfo, Regions
-from ..core.settings import AppSettings
+from ..core.regions import RegionInfo, Regions, embedded_regions
+from ..core.settings import AppSettings, ConnectionMode
 from ..core.status import StatusPresenter, TunnelState
 from ..core.system_proxy import SystemProxy
 
@@ -44,6 +44,8 @@ class LogEntry:
 
 class MainViewModel(GObject.Object):
     MAX_LOG_ENTRIES = 1500
+    #: After this long without a tunnel the status line suggests what to try.
+    SLOW_CONNECT_SECONDS = 40
     MAX_RATE_SAMPLES = 64
 
     __gsignals__ = {
@@ -71,11 +73,11 @@ class MainViewModel(GObject.Object):
         self.connected_region: str | None = None
         self.http_port = 0
         self.socks_port = 0
-        self.sponsor_page_url: str | None = None
-        self.upgrade_version: str | None = None
 
         self._proxy_target: tuple[int, int] | None = None
         self.proxy_backends: list[str] = []
+        self._connecting_since: float | None = None
+        self._slow_id = 0
 
         self.log: collections.deque[LogEntry] = collections.deque(maxlen=self.MAX_LOG_ENTRIES)
         self.rate_history: list[tuple[float, float]] = []
@@ -84,7 +86,9 @@ class MainViewModel(GObject.Object):
 
         self.selected_region = Regions.describe(settings.egress_region)
         self.available_regions: list[RegionInfo] = []
-        self._rebuild_regions(settings.known_regions)
+        # Until the engine has reported once, the countries of the built-in
+        # servers: the engine starts from exactly those.
+        self._rebuild_regions(settings.known_regions or embedded_regions(paths.engine().server_list))
 
         self.engine.state_changed.connect(self._on_state_changed)
         self.engine.notice_received.connect(self._on_notice)
@@ -115,7 +119,18 @@ class MainViewModel(GObject.Object):
 
     @property
     def status_subtitle(self) -> str:
+        if self.state == TunnelState.CONNECTING and self.slow_to_connect:
+            region = self.settings.egress_region
+            if region:
+                return _("Slow to connect through {country}. “Best performance” has many more servers "
+                         "to try.").format(country=Regions.name_of(region))
+            return _("Still looking for a route. On heavily filtered networks this can take a few minutes.")
         return StatusPresenter.subtitle(self.state, self.connected_region, self.status_detail)
+
+    @property
+    def slow_to_connect(self) -> bool:
+        return (self._connecting_since is not None
+                and time.monotonic() - self._connecting_since >= self.SLOW_CONNECT_SECONDS)
 
     @property
     def action_label(self) -> str:
@@ -136,6 +151,17 @@ class MainViewModel(GObject.Object):
     @property
     def proxy_applied(self) -> bool:
         return self._proxy_target is not None
+
+    @property
+    def mode_text(self) -> str:
+        """What the tunnel covers: everything, or what follows the system proxy."""
+        if self.settings.connection_mode == ConnectionMode.VPN:
+            if self.engine.vpn_unavailable:
+                return _("System proxy: VPN mode needs NetworkManager")
+            if self.engine.vpn_mode and self.state == TunnelState.CONNECTED:
+                return _("VPN: all traffic")
+            return _("VPN: all traffic, on connect")
+        return _("System proxy: {state}").format(state=self.system_proxy_text)
 
     @property
     def system_proxy_text(self) -> str:
@@ -173,11 +199,6 @@ class MainViewModel(GObject.Object):
     def shell_exports(self) -> str:
         return system_proxy.shell_exports(self.http_port, self.socks_port)
 
-    @property
-    def upgrade_notice_text(self) -> str:
-        return _("Version {version} exists upstream. Nothing was downloaded and no file here was changed.").format(
-            version=self.upgrade_version)
-
     # ------------------------------------------------------------ commands
 
     def toggle(self) -> None:
@@ -191,7 +212,6 @@ class MainViewModel(GObject.Object):
     def connect_tunnel(self) -> None:
         if self.state in (TunnelState.CONNECTED, TunnelState.CONNECTING):
             return
-        self.sponsor_page_url = None
         self._clear_rates()
         self.append_log(NoticeLevel.INFO, "Client", _("Starting tunnel"))
         self.engine.start(self.settings)
@@ -256,6 +276,9 @@ class MainViewModel(GObject.Object):
 
     def shutdown(self) -> None:
         self._stop_tick()
+        if self._slow_id:
+            GLib.source_remove(self._slow_id)
+            self._slow_id = 0
         self.engine.shutdown()
         if self.proxy_applied or self.proxy.is_applied:
             self.proxy.revert()
@@ -287,6 +310,17 @@ class MainViewModel(GObject.Object):
         else:
             self._stop_tick()
 
+        # Counted from the first attempt, not from each redial within it.
+        if state == TunnelState.CONNECTING:
+            if self._connecting_since is None:
+                self._connecting_since = time.monotonic()
+                self._slow_id = GLib.timeout_add_seconds(self.SLOW_CONNECT_SECONDS, self._on_slow)
+        elif state != TunnelState.CONNECTING:
+            self._connecting_since = None
+            if self._slow_id:
+                GLib.source_remove(self._slow_id)
+                self._slow_id = 0
+
         self._apply_or_revert_proxy()
         self.emit("changed")
         if previous != state:
@@ -306,11 +340,6 @@ class MainViewModel(GObject.Object):
             self.socks_port = t.socks_port
             self.http_port = t.http_port
             self._apply_or_revert_proxy()
-        elif kind == NoticeType.HOMEPAGE:
-            self.sponsor_page_url = n.string("url")
-        elif kind == NoticeType.CLIENT_UPGRADE_AVAILABLE:
-            # Reported only. Nothing is downloaded and no binary is replaced.
-            self.upgrade_version = n.string("version")
         elif kind == NoticeType.BYTES_TRANSFERRED:
             # "received" is inbound, "sent" is outbound: down first, then up.
             self._record_rate(n.long("received") or 0, n.long("sent") or 0)
@@ -375,6 +404,11 @@ class MainViewModel(GObject.Object):
         self.emit("changed")
         return GLib.SOURCE_CONTINUE
 
+    def _on_slow(self) -> bool:
+        self._slow_id = 0
+        self.emit("changed")
+        return GLib.SOURCE_REMOVE
+
     # --------------------------------------------------------------- log
 
     def append_log(self, level: NoticeLevel, kind: str, message: str) -> None:
@@ -392,7 +426,8 @@ class MainViewModel(GObject.Object):
         tunnel. It is only handed back when the session actually ends.
         """
         state = self.state
-        if not self.settings.set_system_proxy:
+        if not self.settings.set_system_proxy or self.engine.vpn_mode:
+            # In VPN mode everything already goes through the tun.
             self._revert_proxy()
         elif state == TunnelState.CONNECTED and self.http_port > 0:
             if self._proxy_target != (self.http_port, self.socks_port):

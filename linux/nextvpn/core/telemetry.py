@@ -55,7 +55,7 @@ class TunnelTelemetry:
         T.LISTENING_SOCKS_PROXY_PORT, T.LISTENING_HTTP_PROXY_PORT, T.TUNNELS,
         T.ACTIVE_TUNNEL, T.CONNECTED_SERVER_REGION, T.CLIENT_REGION,
         T.AVAILABLE_EGRESS_REGIONS, T.HOMEPAGE, T.CLIENT_UPGRADE_AVAILABLE,
-        T.BYTES_TRANSFERRED,
+        T.BYTES_TRANSFERRED, T.VPN_UP, T.VPN_SETUP_FAILED,
     })
 
     def __init__(self, clock=time.monotonic):
@@ -70,6 +70,9 @@ class TunnelTelemetry:
         self.homepage_url: str | None = None
         self.upgrade_available_version: str | None = None
         self.available_regions: list[str] = []
+        #: VPN mode: the tun device and the interface the tunnel itself leaves by.
+        self.vpn_device: str | None = None
+        self.vpn_uplink: str | None = None
 
     def apply(self, n: Notice) -> TelemetrySignal:
         """Applies one notice and reports what it moved."""
@@ -125,6 +128,11 @@ class TunnelTelemetry:
             self.upgrade_available_version = n.string("version")
             return TelemetrySignal.NONE
 
+        if kind == T.VPN_UP:
+            self.vpn_device = n.string("device")
+            self.vpn_uplink = n.string("uplink")
+            return TelemetrySignal.NONE
+
         if kind == T.BYTES_TRANSFERRED:
             self.stats.bytes_sent += max(0, n.long("sent") or 0)
             self.stats.bytes_received += max(0, n.long("received") or 0)
@@ -145,6 +153,8 @@ class TunnelTelemetry:
         self.connected_region = None
         self.active_protocol = None
         self.homepage_url = None
+        self.vpn_device = None
+        self.vpn_uplink = None
 
     def clear_listeners(self) -> None:
         """Called when the engine process is gone: the listeners went with it."""
@@ -152,3 +162,5 @@ class TunnelTelemetry:
         self.http_port = 0
         self.tunnel_count = 0
         self.stats.connected_at = None
+        self.vpn_device = None
+        self.vpn_uplink = None

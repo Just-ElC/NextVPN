@@ -32,6 +32,8 @@ class StubEngine:
         self.verbose = False
         self.state = TunnelState.DISCONNECTED
         self.calls = []
+        self.vpn_mode = False
+        self.vpn_unavailable = False
         self.state_changed, self.notice_received = Signal(), Signal()
         self.output_received, self.stats_updated, self.regions_updated = Signal(), Signal(), Signal()
 
@@ -88,6 +90,41 @@ class ViewModelTests(unittest.TestCase):
         self.engine.ports(http, socks)
         self.engine.feed('{"noticeType":"Tunnels","data":{"count":1}}')
         self.engine.set_state(TunnelState.CONNECTED)
+
+    def test_a_slow_connection_to_one_country_suggests_best_performance(self):
+        self.settings.egress_region = "JP"
+        self.vm.connect_tunnel()
+        self.engine.set_state(TunnelState.CONNECTING)
+        self.assertEqual("Finding a route that works on this network", self.vm.status_subtitle)
+        self.vm._connecting_since -= self.vm.SLOW_CONNECT_SECONDS
+        self.assertIn("Japan", self.vm.status_subtitle)
+        self.assertIn("Best performance", self.vm.status_subtitle)
+        # A redial does not restart the count; a finished attempt does.
+        self.engine.set_state(TunnelState.CONNECTING)
+        self.assertTrue(self.vm.slow_to_connect)
+        self.engine.set_state(TunnelState.DISCONNECTED)
+        self.assertFalse(self.vm.slow_to_connect)
+
+    def test_in_vpn_mode_the_system_proxy_is_left_alone(self):
+        # Everything already goes through the tun; pointing programs at the
+        # local proxy as well would only add a hop.
+        self.engine.vpn_mode = True
+        self.connect_session()
+        self.assertEqual({"mode": "none", "port": 0}, self.backend.store)
+        self.assertFalse(self.vm.proxy_applied)
+        self.assertEqual("VPN: all traffic", self.vm.mode_text)
+
+    def test_the_home_page_says_when_vpn_mode_fell_back_to_the_proxy(self):
+        self.engine.vpn_unavailable = True
+        self.connect_session()
+        self.assertEqual({"mode": "manual", "port": 41002}, self.backend.store)
+        self.assertEqual("System proxy: VPN mode needs NetworkManager", self.vm.mode_text)
+
+    def test_proxy_mode_reports_the_system_proxy(self):
+        from nextvpn.core.settings import ConnectionMode
+        self.settings.connection_mode = ConnectionMode.PROXY
+        self.connect_session()
+        self.assertTrue(self.vm.mode_text.startswith("System proxy: "))
 
     def test_the_proxy_is_applied_only_once_the_tunnel_is_up(self):
         self.vm.connect_tunnel()

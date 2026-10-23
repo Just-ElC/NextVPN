@@ -139,9 +139,13 @@ class NoticePolicyTests(unittest.TestCase):
 
     def test_notices_that_move_something_visible_are_marked_as_such(self):
         for kind in (NoticeType.CLIENT_REGION, NoticeType.ACTIVE_TUNNEL, NoticeType.CONNECTED_SERVER_REGION,
-                     NoticeType.LISTENING_HTTP_PROXY_PORT, NoticeType.LISTENING_SOCKS_PROXY_PORT,
-                     NoticeType.HOMEPAGE, NoticeType.CLIENT_UPGRADE_AVAILABLE):
+                     NoticeType.LISTENING_HTTP_PROXY_PORT, NoticeType.LISTENING_SOCKS_PROXY_PORT):
             self.assertTrue(NoticePolicy.changes_visible_state(kind))
+
+    def test_landing_pages_and_upgrade_offers_are_logged_but_never_shown(self):
+        for kind in (NoticeType.HOMEPAGE, NoticeType.CLIENT_UPGRADE_AVAILABLE):
+            self.assertFalse(NoticePolicy.changes_visible_state(kind))
+            self.assertTrue(NoticePolicy.should_log(kind, verbose=False))
 
     def test_everything_else_stays_off_the_main_loop_by_default(self):
         for kind in (NoticeType.CONNECTING_SERVER, NoticeType.TRAFFIC_RATE_LIMITS, "CandidateServers"):
