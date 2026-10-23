@@ -157,15 +157,6 @@ msgstr "Скрыть"
 msgid "Could not connect"
 msgstr "Не удалось подключиться"
 
-msgid "Open"
-msgstr "Открыть"
-
-msgid "The network provided a landing page for this session."
-msgstr "Сеть предложила стартовую страницу для этого сеанса."
-
-msgid "Version {version} exists upstream. Nothing was downloaded and no file here was changed."
-msgstr "Вышла версия {version}. Ничего не скачано, ни один файл здесь не изменён."
-
 msgid "Off — configure apps manually"
 msgstr "Выключен — настройте программы вручную"
 

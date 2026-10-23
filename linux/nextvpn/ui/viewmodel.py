@@ -22,7 +22,7 @@ from ..core.i18n import _
 from ..core.notice import Notice, NoticeType
 from ..core.policy import NoticeLevel, NoticePolicy
 from ..core.regions import RegionInfo, Regions
-from ..core.settings import AppSettings
+from ..core.settings import AppSettings, ConnectionMode
 from ..core.status import StatusPresenter, TunnelState
 from ..core.system_proxy import SystemProxy
 
@@ -71,8 +71,6 @@ class MainViewModel(GObject.Object):
         self.connected_region: str | None = None
         self.http_port = 0
         self.socks_port = 0
-        self.sponsor_page_url: str | None = None
-        self.upgrade_version: str | None = None
 
         self._proxy_target: tuple[int, int] | None = None
         self.proxy_backends: list[str] = []
@@ -138,6 +136,17 @@ class MainViewModel(GObject.Object):
         return self._proxy_target is not None
 
     @property
+    def mode_text(self) -> str:
+        """What the tunnel covers: everything, or what follows the system proxy."""
+        if self.settings.connection_mode == ConnectionMode.VPN:
+            if self.engine.vpn_unavailable:
+                return _("System proxy: VPN mode needs NetworkManager")
+            if self.engine.vpn_mode and self.state == TunnelState.CONNECTED:
+                return _("VPN: all traffic")
+            return _("VPN: all traffic, on connect")
+        return _("System proxy: {state}").format(state=self.system_proxy_text)
+
+    @property
     def system_proxy_text(self) -> str:
         if not self.settings.set_system_proxy:
             return _("Off — configure apps manually")
@@ -173,11 +182,6 @@ class MainViewModel(GObject.Object):
     def shell_exports(self) -> str:
         return system_proxy.shell_exports(self.http_port, self.socks_port)
 
-    @property
-    def upgrade_notice_text(self) -> str:
-        return _("Version {version} exists upstream. Nothing was downloaded and no file here was changed.").format(
-            version=self.upgrade_version)
-
     # ------------------------------------------------------------ commands
 
     def toggle(self) -> None:
@@ -191,7 +195,6 @@ class MainViewModel(GObject.Object):
     def connect_tunnel(self) -> None:
         if self.state in (TunnelState.CONNECTED, TunnelState.CONNECTING):
             return
-        self.sponsor_page_url = None
         self._clear_rates()
         self.append_log(NoticeLevel.INFO, "Client", _("Starting tunnel"))
         self.engine.start(self.settings)
@@ -306,11 +309,6 @@ class MainViewModel(GObject.Object):
             self.socks_port = t.socks_port
             self.http_port = t.http_port
             self._apply_or_revert_proxy()
-        elif kind == NoticeType.HOMEPAGE:
-            self.sponsor_page_url = n.string("url")
-        elif kind == NoticeType.CLIENT_UPGRADE_AVAILABLE:
-            # Reported only. Nothing is downloaded and no binary is replaced.
-            self.upgrade_version = n.string("version")
         elif kind == NoticeType.BYTES_TRANSFERRED:
             # "received" is inbound, "sent" is outbound: down first, then up.
             self._record_rate(n.long("received") or 0, n.long("sent") or 0)
@@ -392,7 +390,8 @@ class MainViewModel(GObject.Object):
         tunnel. It is only handed back when the session actually ends.
         """
         state = self.state
-        if not self.settings.set_system_proxy:
+        if not self.settings.set_system_proxy or self.engine.vpn_mode:
+            # In VPN mode everything already goes through the tun.
             self._revert_proxy()
         elif state == TunnelState.CONNECTED and self.http_port > 0:
             if self._proxy_target != (self.http_port, self.socks_port):

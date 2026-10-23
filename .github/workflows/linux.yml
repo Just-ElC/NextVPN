@@ -1,5 +1,6 @@
-# NextVPN for Linux: tests, a real connection to the Psiphon network, and the
-# packages for every supported distribution. A v*-linux tag also publishes them
+# NextVPN for Linux: tests, real connections to the Psiphon network in both
+# modes, the engine checked against its source, and the packages for every
+# supported distribution. A v*-linux tag also publishes them
 # as a GitHub release. The Windows build is not involved.
 name: Linux
 
@@ -45,15 +46,77 @@ jobs:
         working-directory: linux
         run: NEXTVPN_REAL_ENGINE_TEST=1 python3 -m unittest -v tests.test_engine.RealEngineSmokeTest
 
+  engine:
+    name: The bundled engine is built from its source
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild it and compare
+        run: |
+          linux/tools/build-engine.sh "" "$RUNNER_TEMP/psiphon-tunnel-core"
+          sha256sum linux/engine/psiphon-tunnel-core-x86_64 "$RUNNER_TEMP/psiphon-tunnel-core"
+          cmp linux/engine/psiphon-tunnel-core-x86_64 "$RUNNER_TEMP/psiphon-tunnel-core"
+
   connect:
     name: Connects to the Psiphon network
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Connect and carry traffic, best performance
-        run: python3 linux/tools/connect-check.py --timeout 240
+        run: python3 linux/tools/connect-check.py --timeout 240 --regions-wait 45
       - name: Connect and carry traffic, exit in Germany
         run: python3 linux/tools/connect-check.py --timeout 240 --region DE
+
+  vpn:
+    name: Whole-system VPN through NetworkManager
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # NetworkManager only lets a user with a session own a profile, as on a
+      # desktop; a login shell gives the runner user one.
+      AS_USER: sudo su -l runner -c
+    steps:
+      - uses: actions/checkout@v4
+      - name: NetworkManager, managing nothing but the VPN interface
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends network-manager dnsutils
+          printf '[main]\ndns=systemd-resolved\n[keyfile]\nunmanaged-devices=*,except:interface-name:nextvpn0\n' |
+            sudo tee /etc/NetworkManager/conf.d/99-nextvpn-ci.conf
+          # On a desktop, polkit lets the user of the active session manage
+          # their own profiles. The runner has no such session; this grants the
+          # same and nothing more.
+          printf '%s\n' 'polkit.addRule(function(action, subject) {' \
+            '  if (action.id.indexOf("org.freedesktop.NetworkManager.") == 0 && subject.user == "runner")' \
+            '    return polkit.Result.YES;' '});' | sudo tee /etc/polkit-1/rules.d/50-nextvpn-ci.rules
+          sudo systemctl restart polkit
+          sudo systemctl restart NetworkManager
+          nmcli general
+      - name: Every program's traffic and DNS go through the tunnel, and nothing is left after
+        run: $AS_USER "cd '$GITHUB_WORKSPACE' && python3 linux/tools/connect-check.py --vpn --timeout 240"
+      - name: The same with the exit in Germany
+        run: $AS_USER "cd '$GITHUB_WORKSPACE' && python3 linux/tools/connect-check.py --vpn --timeout 240 --region DE"
+      - name: Strict reverse-path filtering, as NixOS's firewall does by default
+        run: |
+          sudo sysctl -w net.ipv4.conf.all.rp_filter=1 net.ipv4.conf.eth0.rp_filter=1
+          sudo iptables -t raw -I PREROUTING -m rpfilter --invert -j DROP
+          sudo ip6tables -t raw -I PREROUTING -m rpfilter --invert -j DROP
+          $AS_USER "cd '$GITHUB_WORKSPACE' && python3 linux/tools/connect-check.py --vpn --timeout 240"
+          sudo iptables -t raw -L PREROUTING -v -n
+      - name: A killed app still gives the network back
+        run: |
+          $AS_USER "cd '$GITHUB_WORKSPACE' && exec python3 linux/tools/connect-check.py --vpn --timeout 240 --hold 900" \
+            > "$RUNNER_TEMP/hold.log" 2>&1 &
+          for i in $(seq 240); do grep -q '^holding' "$RUNNER_TEMP/hold.log" && break; sleep 1; done
+          cat "$RUNNER_TEMP/hold.log"
+          grep -q '^holding' "$RUNNER_TEMP/hold.log"
+          sudo pkill -KILL -f 'connect-check.py --vpn'
+          for i in $(seq 30); do
+            sudo python3 linux/tools/connect-check.py --check-clean && break
+            sleep 1
+          done
+          sudo python3 linux/tools/connect-check.py --check-clean
+          curl -sS --max-time 20 https://www.cloudflare.com/cdn-cgi/trace | grep -E '^(ip|loc)='
 
   tarball:
     name: Source archive
@@ -164,7 +227,7 @@ jobs:
     name: Publish release
     # A pushed v*-linux tag, or a manual run that names the tag to create.
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-    needs: [test, connect, tarball, deb, rpm, arch, nix]
+    needs: [test, engine, connect, vpn, tarball, deb, rpm, arch, nix]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

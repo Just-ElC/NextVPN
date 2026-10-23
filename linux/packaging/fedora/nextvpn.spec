@@ -2,8 +2,9 @@
 #
 #   linux/packaging/fedora/build-rpm.sh
 #
-# The bundled engine is the official static, UPX-packed Psiphon build: there is
-# nothing in it to split into debuginfo, and strip would damage it.
+# The bundled engine is a static, already stripped Go build that is checked
+# byte for byte against its source: there is nothing in it to split into
+# debuginfo, and it is installed exactly as it is.
 %global debug_package %{nil}
 %global __strip /bin/true
 %global app_id io.github.just_elc.NextVPN

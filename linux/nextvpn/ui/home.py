@@ -9,7 +9,7 @@ the narrow breakpoint the two-up row becomes a stack.
 
 from __future__ import annotations
 
-from gi.repository import Adw, Gdk, Gio, GObject, Gtk
+from gi.repository import Adw, Gdk, GObject, Gtk
 
 from ..core.i18n import _
 from .viewmodel import MainViewModel
@@ -236,7 +236,7 @@ class HomePage(Gtk.ScrolledWindow):
     def _build_details(self):
         self.location_card, self.location_value = _field("find-location-symbolic", _("Your location"), "body")
         self.proxy_card, self.ports_value = _field("network-vpn-symbolic", _("Local proxy"), "body")
-        self.system_card, self.system_value = _field("emblem-system-symbolic", _("System proxy"), "body")
+        self.system_card, self.system_value = _field("emblem-system-symbolic", _("Mode"), "body")
         for card in (self.location_card, self.proxy_card, self.system_card):
             card.add_css_class("subtle")
 
@@ -258,15 +258,10 @@ class HomePage(Gtk.ScrolledWindow):
         self.fault_notice.action.set_visible(True)
         self.fault_notice.action.connect("clicked", lambda *_: self.window.show_page("log"))
 
-        self.sponsor_notice = Notice("info", "dialog-information-symbolic", closable=True)
-        self.sponsor_notice.action.set_label(_("Open"))
-        self.sponsor_notice.action.set_visible(True)
-        self.sponsor_notice.action.connect("clicked", self._open_sponsor_page)
-
-        self.upgrade_notice = Notice("info", "dialog-information-symbolic", closable=True)
-
-        for n in (self.fault_notice, self.sponsor_notice, self.upgrade_notice):
-            self.notices.append(n)
+        # Landing pages and upstream upgrade offers are only logged: the
+        # sponsor's page and Psiphon's own Windows client version mean nothing
+        # to someone using this app.
+        self.notices.append(self.fault_notice)
 
     # --------------------------------------------------------- responsive
 
@@ -323,14 +318,12 @@ class HomePage(Gtk.ScrolledWindow):
 
         _set(self.location_value, vm.client_region_text)
         _set(self.ports_value, vm.ports_text)
-        _set(self.system_value, vm.system_proxy_text)
+        _set(self.system_value, vm.mode_text)
+        if self.system_value.get_tooltip_text() != vm.mode_text:
+            self.system_value.set_tooltip_text(vm.mode_text)
         self.copy_env.set_visible(bool(vm.shell_exports))
 
         self.fault_notice.show(_("Could not connect"), vm.status_detail, vm.is_faulted)
-        self.sponsor_notice.show("", _("The network provided a landing page for this session."),
-                                 bool(vm.sponsor_page_url))
-        if vm.upgrade_version:
-            self.upgrade_notice.show("", vm.upgrade_notice_text, True)
 
     # ------------------------------------------------------------ actions
 
@@ -341,20 +334,7 @@ class HomePage(Gtk.ScrolledWindow):
         self.get_clipboard().set_content(Gdk.ContentProvider.new_for_value(GObject.Value(str, text)))
         self.window.toast(_("Copied. Paste it into a terminal to send its traffic through the tunnel."))
 
-    def _open_sponsor_page(self, *_):
-        url = self.vm.sponsor_page_url
-        if url:
-            open_uri(self.window, url)
-
 
 def _set(label: Gtk.Label, text: str) -> None:
     if label.get_label() != text:
         label.set_label(text)
-
-
-def open_uri(window: Gtk.Window, uri: str) -> None:
-    if hasattr(Gtk, "UriLauncher"):            # GTK 4.10+
-        Gtk.UriLauncher.new(uri).launch(window, None, None, None)
-    else:                                      # pragma: no cover
-        Gio.AppInfo.launch_default_for_uri(uri, None)
-

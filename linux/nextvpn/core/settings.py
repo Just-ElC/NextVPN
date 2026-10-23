@@ -39,6 +39,20 @@ class ClientPlatform:
     ALL = (WINDOWS, LINUX)
 
 
+class ConnectionMode:
+    """
+    What goes through the tunnel.
+
+    VPN: every program, through a tun device NetworkManager sets up (see vpn).
+    PROXY: programs that follow the GNOME or KDE proxy settings, plus whatever
+    is pointed at the local proxy by hand; the only mode without NetworkManager.
+    """
+
+    VPN = "vpn"
+    PROXY = "proxy"
+    ALL = (VPN, PROXY)
+
+
 #: Loopback, the RFC1918 ranges, link-local, IPv6 unique-local and mDNS names,
 #: written the way GNOME and KDE both read them.
 DEFAULT_BYPASS_LIST = (
@@ -76,7 +90,9 @@ class AppSettings:
     client_platform: str = ClientPlatform.WINDOWS
 
     # --- System integration ----------------------------------------------
-    #: Point GNOME and KDE at the local proxy while connected.
+    #: See ConnectionMode. VPN falls back to the proxy where NetworkManager is missing.
+    connection_mode: str = ConnectionMode.VPN
+    #: Point GNOME and KDE at the local proxy while connected (proxy mode).
     set_system_proxy: bool = True
     #: Hosts that bypass the tunnel. Commas, CIDR ranges and * wildcards.
     proxy_bypass_list: str = DEFAULT_BYPASS_LIST
@@ -137,6 +153,8 @@ class AppSettings:
 
         if settings.client_platform not in ClientPlatform.ALL:
             settings.client_platform = ClientPlatform.WINDOWS
+        if settings.connection_mode not in ConnectionMode.ALL:
+            settings.connection_mode = ConnectionMode.VPN
         return settings
 
     def save_to(self, path: os.PathLike | str) -> None:

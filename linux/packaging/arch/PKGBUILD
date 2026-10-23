@@ -3,8 +3,9 @@
 #
 #   cd linux/packaging/arch && makepkg -si
 #
-# The bundled engine is the official static, UPX-packed Psiphon build: strip
-# would damage it, and there is nothing in it to put in a debug package.
+# The bundled engine is a static, already stripped Go build that is checked
+# byte for byte against its source: it is installed exactly as it is, and
+# there is nothing in it to put in a debug package.
 
 pkgname=nextvpn
 pkgver=1.0.0

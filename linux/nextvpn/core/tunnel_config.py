@@ -17,7 +17,7 @@ import platform
 import re
 from pathlib import Path
 
-from . import paths
+from . import paths, vpn
 from .settings import AppSettings, ClientPlatform
 
 
@@ -38,21 +38,21 @@ STRIPPED_FIELDS = (
 )
 
 
-def write(settings: AppSettings, engine: paths.EnginePaths | None = None) -> Path:
+def write(settings: AppSettings, engine: paths.EnginePaths | None = None, packet_tunnel: bool = False) -> Path:
     """Writes the runtime config and returns its path."""
     engine = engine or paths.engine()
     data_root = paths.tunnel_data_dir()
     data_root.mkdir(parents=True, exist_ok=True)
-    return write_to(paths.runtime_config_file(), read_base_config(engine), settings, data_root)
+    return write_to(paths.runtime_config_file(), read_base_config(engine), settings, data_root, packet_tunnel)
 
 
 def write_to(path: os.PathLike | str, base_config_json: str, settings: AppSettings,
-             data_root_directory: os.PathLike | str) -> Path:
+             data_root_directory: os.PathLike | str, packet_tunnel: bool = False) -> Path:
     """
     Builds the config and writes it to an explicit path, as BOM-less UTF-8 and
     readable only by the user: it may carry upstream proxy credentials.
     """
-    text = build(base_config_json, settings, str(data_root_directory))
+    text = build(base_config_json, settings, str(data_root_directory), packet_tunnel)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     # The engine creates its datastore inside this directory but refuses to
@@ -67,7 +67,8 @@ def write_to(path: os.PathLike | str, base_config_json: str, settings: AppSettin
     return path
 
 
-def build(base_config_json: str, settings: AppSettings, data_root_directory: str) -> str:
+def build(base_config_json: str, settings: AppSettings, data_root_directory: str,
+          packet_tunnel: bool = False) -> str:
     """
     Produces the runtime config text from a base config, without touching disk.
 
@@ -122,6 +123,15 @@ def build(base_config_json: str, settings: AppSettings, data_root_directory: str
     root["EmitDiagnosticNotices"] = True
     root["EmitDiagnosticNetworkParameters"] = True
     root["EmitServerAlerts"] = True
+
+    # --- VPN mode ------------------------------------------------------
+    # DNS the system sends to the tun's resolver address is answered by the
+    # Psiphon server's resolver. The tun itself is handed over on the command
+    # line by vpn_helper.
+    if packet_tunnel:
+        root["PacketTunnelTransparentDNSIPv4Address"] = vpn.DNS4
+    else:
+        root.pop("PacketTunnelTransparentDNSIPv4Address", None)
 
     root["ClientPlatform"] = client_platform(settings.client_platform)
 

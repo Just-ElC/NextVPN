@@ -100,7 +100,9 @@ class Harness(unittest.TestCase):
         def write(settings, ep):
             return tunnel_config.write_to(self.config_path, ep.base_config.read_text(), settings,
                                           self.dir / "tunnel")
-        return TunnelEngine(post=self.loop.post, engine_paths=lambda: engine_paths, write_config=write)
+        # Never a real VPN from a test, even where NetworkManager runs.
+        return TunnelEngine(post=self.loop.post, engine_paths=lambda: engine_paths, write_config=write,
+                            vpn_available=lambda: False)
 
     def tearDown(self):
         self.engine.shutdown(timeout=2)
@@ -287,7 +289,8 @@ class EngineLifetimeTests(Harness):
             def write(s, e):
                 return tunnel_config.write_to(Path({str(self.dir / 'child.config')!r}),
                                               e.base_config.read_text(), s, {str(self.dir)!r})
-            engine = TunnelEngine(post=lambda fn, *a: fn(*a), engine_paths=lambda: ep, write_config=write)
+            engine = TunnelEngine(post=lambda fn, *a: fn(*a), engine_paths=lambda: ep, write_config=write,
+                                  vpn_available=lambda: False)
             engine.start(AppSettings())
             print(engine.pid, flush=True)
             time.sleep(60)
@@ -322,7 +325,8 @@ class RealEngineSmokeTest(unittest.TestCase):
             def write(settings, e):
                 return tunnel_config.write_to(Path(d) / "runtime.config", tunnel_config.read_base_config(e),
                                               settings, Path(d) / "tunnel")
-            engine = TunnelEngine(post=loop.post, engine_paths=lambda: ep, write_config=write)
+            engine = TunnelEngine(post=loop.post, engine_paths=lambda: ep, write_config=write,
+                                  vpn_available=lambda: False)
             notices = []
             engine.notice_received.connect(lambda n: notices.append(n.type))
             try:
