@@ -132,9 +132,13 @@ def main() -> int:
                 print(f"  {n.type}: {n.message}", flush=True)
             elif n.type in (NoticeType.INFO, NoticeType.WARNING) and "tunnel" in n.message.lower():
                 print(f"  {n.type}: {n.message}", flush=True)
+            elif "ServerList" in n.type or "ServerEntries" in n.type:
+                print(f"  {n.type}: {n.message[:200]}", flush=True)
 
         engine.state_changed.connect(on_state)
         engine.notice_received.connect(on_notice)
+        # Server list fetches are only reported to the app in verbose mode.
+        engine.verbose = bool(args.regions_wait)
 
         mode = ConnectionMode.VPN if args.vpn else ConnectionMode.PROXY
         started = time.monotonic()

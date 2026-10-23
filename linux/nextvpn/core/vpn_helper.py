@@ -115,12 +115,13 @@ class Helper:
 
         uplink = vpn.detect_uplink()
         if uplink is None:
-            notice(VPN_SETUP_FAILED, message="No network connection: there is no default route.")
+            notice(VPN_SETUP_FAILED, step="route", detail="",
+                   message="No network connection: there is no default route.")
             return 3
         try:
             self.uuid = vpn.bring_up(uplink)
         except vpn.VpnError as ex:
-            notice(VPN_SETUP_FAILED, message=str(ex))
+            notice(VPN_SETUP_FAILED, step=ex.step, detail=ex.detail, denied=ex.denied, message=str(ex))
             return 4
         self.uplink = uplink
         notice(VPN_UP, device=vpn.IFNAME, uplink=uplink.iface, dns=",".join(uplink.dns))
@@ -155,7 +156,9 @@ class Helper:
             self.proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                          preexec_fn=child_setup, close_fds=True)
         except OSError as ex:
-            notice(VPN_SETUP_FAILED, message=f"Could not start the tunnel engine: {ex.strerror or ex}")
+            detail = ex.strerror or str(ex)
+            notice(VPN_SETUP_FAILED, step="engine", detail=detail,
+                   message=f"Could not start the tunnel engine: {detail}")
             return False
         threading.Thread(target=self._forward, args=(self.proc,), daemon=True).start()
         return True

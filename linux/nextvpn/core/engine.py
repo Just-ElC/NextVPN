@@ -362,7 +362,7 @@ class TunnelEngine:
         if n.type == NoticeType.ERROR:
             self._last_error = n.message
         elif n.type == NoticeType.VPN_SETUP_FAILED:
-            self._setup_error = n.message
+            self._setup_error = vpn_failure_text(n)
 
         signal_ = self.telemetry.apply(n)
 
@@ -434,6 +434,27 @@ class TunnelEngine:
 
 
 # ------------------------------------------------------------------ helpers
+
+def vpn_failure_text(n: Notice) -> str:
+    """What vpn_helper reported, worded for the user."""
+    step = n.string("step") or ""
+    detail = n.string("detail") or ""
+    if step == "route":
+        text = _("No network connection: this machine has no route to the internet.")
+    elif step == "create":
+        text = _("NetworkManager could not create the VPN interface: {detail}").format(detail=detail)
+    elif step == "activate":
+        text = _("NetworkManager could not bring the VPN interface up: {detail}").format(detail=detail)
+    elif step == "engine":
+        text = _("Could not start the tunnel engine: {error}").format(error=detail)
+    else:
+        text = n.message
+    if n.data.get("denied") is True:
+        text += " " + _("NetworkManager allows this without a password only to the user of an active "
+                        "desktop session. Sign in to the desktop, or switch Settings → System to the "
+                        "system proxy.")
+    return text
+
 
 def _send(proc: subprocess.Popen, sig: int) -> None:
     try:

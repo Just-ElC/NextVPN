@@ -142,9 +142,6 @@ msgstr "Ваше местоположение"
 msgid "Local proxy"
 msgstr "Локальный прокси"
 
-msgid "System proxy"
-msgstr "Системный прокси"
-
 msgid "Copy proxy settings for a terminal"
 msgstr "Скопировать настройки прокси для терминала"
 
@@ -259,9 +256,6 @@ msgstr "Транспорт в виде Shadowsocks."
 
 msgid "System"
 msgstr "Система"
-
-msgid "Route the whole desktop"
-msgstr "Направить весь рабочий стол"
 
 msgid "Points GNOME and KDE at the local proxy while connected, keeps it there while the tunnel reconnects so nothing leaks around it, and puts your own settings back on disconnect."
 msgstr "Пока туннель подключён, GNOME и KDE используют локальный прокси. Во время переподключения прокси остаётся, чтобы трафик не утёк мимо туннеля, а при отключении возвращаются ваши прежние настройки."
@@ -654,3 +648,57 @@ msgstr "Узбекистан"
 
 msgid "South Africa"
 msgstr "ЮАР"
+
+msgid "Mode"
+msgstr "Режим"
+
+msgid "VPN: all traffic"
+msgstr "VPN: весь трафик"
+
+msgid "VPN: all traffic, on connect"
+msgstr "VPN: весь трафик, при подключении"
+
+msgid "System proxy: {state}"
+msgstr "Системный прокси: {state}"
+
+msgid "System proxy: VPN mode needs NetworkManager"
+msgstr "Системный прокси: для VPN нужен NetworkManager"
+
+msgid "What goes through the tunnel"
+msgstr "Что идёт через туннель"
+
+msgid "Everything (VPN)"
+msgstr "Всё (VPN)"
+
+msgid "Programs that use the system proxy"
+msgstr "Программы, которые используют системный прокси"
+
+msgid "Set the system proxy"
+msgstr "Включать системный прокси"
+
+msgid "Every program, game and terminal goes through the tunnel, DNS included, on any desktop. NetworkManager sets up the VPN interface; no password is asked."
+msgstr "Через туннель идут все программы, игры и терминал, вместе с DNS, в любом окружении. VPN-интерфейс создаёт NetworkManager, пароль не нужен."
+
+msgid "NetworkManager was not found here, so connections fall back to the system proxy. Install and start NetworkManager to tunnel every program."
+msgstr "NetworkManager здесь не найден, поэтому подключение работает через системный прокси. Установите и запустите NetworkManager, чтобы через туннель шли все программы."
+
+msgid "Only programs that follow the GNOME or KDE proxy settings go through the tunnel, plus whatever you point at the local proxy yourself. Most programs on Hyprland, Sway and other window managers ignore it."
+msgstr "Через туннель идут только программы, которые следуют настройкам прокси GNOME или KDE, и те, что вы сами направите на локальный прокси. На Hyprland, Sway и других оконных менеджерах большинство программ его не замечают."
+
+msgid "No network connection: this machine has no route to the internet."
+msgstr "Нет подключения к сети: у компьютера нет маршрута в интернет."
+
+msgid "NetworkManager could not create the VPN interface: {detail}"
+msgstr "NetworkManager не смог создать VPN-интерфейс: {detail}"
+
+msgid "NetworkManager could not bring the VPN interface up: {detail}"
+msgstr "NetworkManager не смог включить VPN-интерфейс: {detail}"
+
+msgid "NetworkManager allows this without a password only to the user of an active desktop session. Sign in to the desktop, or switch Settings → System to the system proxy."
+msgstr "Без пароля NetworkManager разрешает это только пользователю активного сеанса рабочего стола. Войдите в рабочий стол или переключите «Настройки → Система» на системный прокси."
+
+msgid "Slow to connect through {country}. “Best performance” has many more servers to try."
+msgstr "Долго подключается через страну «{country}». У варианта «Самая быстрая» серверов намного больше."
+
+msgid "Still looking for a route. On heavily filtered networks this can take a few minutes."
+msgstr "Всё ещё ищем путь. В сильно фильтруемых сетях это может занять несколько минут."

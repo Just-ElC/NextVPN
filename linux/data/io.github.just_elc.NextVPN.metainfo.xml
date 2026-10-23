@@ -14,17 +14,19 @@
   <description>
     <p>
       One button, no accounts, no subscription and no traffic limits. NextVPN finds a route
-      that works on your network and points your desktop at it.
+      that works on your network and sends your traffic through it.
     </p>
     <p xml:lang="ru">
       Одна кнопка, без регистрации, без подписки и без ограничений по трафику. NextVPN находит
-      маршрут, который работает в вашей сети, и направляет через него рабочий стол.
+      маршрут, который работает в вашей сети, и пускает через него ваш трафик.
     </p>
     <ul>
       <li>Choose the exit country, or let the engine pick the fastest</li>
       <li xml:lang="ru">Выбор страны выхода или самая быстрая автоматически</li>
-      <li>Sets the GNOME and KDE system proxy while connected and restores yours afterwards</li>
-      <li xml:lang="ru">Включает системный прокси GNOME и KDE на время подключения и возвращает ваш после</li>
+      <li>Sends every program through the tunnel, DNS included, on any desktop or window manager</li>
+      <li xml:lang="ru">Пускает через туннель все программы, вместе с DNS, в любом окружении и оконном менеджере</li>
+      <li>Or only sets the GNOME and KDE system proxy, and restores yours afterwards</li>
+      <li xml:lang="ru">Или только включает системный прокси GNOME и KDE и потом возвращает ваш</li>
       <li>Lives in the notification area and can start when you sign in</li>
       <li xml:lang="ru">Живёт в области уведомлений и может запускаться при входе в систему</li>
       <li>Light and dark style, follows the desktop</li>
@@ -83,6 +85,12 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.1.0" date="2026-10-23">
+      <description>
+        <p>VPN mode: every program, game and terminal goes through the tunnel, DNS included, on any desktop, Hyprland and other window managers too. NetworkManager sets the interface up; no password is asked.</p>
+        <p>The engine is built from the newest upstream psiphon-tunnel-core. The tray icon shows on quickshell-based shells such as caelestia, and upstream notices no longer appear as banners.</p>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-10-18">
       <description>
         <p>First release for Linux: GTK 4 and libadwaita, the same servers and features as the Windows build.</p>

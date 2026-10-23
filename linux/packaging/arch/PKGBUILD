@@ -8,7 +8,7 @@
 # there is nothing in it to put in a debug package.
 
 pkgname=nextvpn
-pkgver=1.0.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc='Free internet in one click: a GTK client for the Psiphon network'
 arch=('x86_64')
@@ -24,7 +24,9 @@ depends=(
   'libadwaita'
   'gsettings-desktop-schemas'
   'hicolor-icon-theme'
+  'iproute2'
 )
+optdepends=('networkmanager: VPN mode, which sends every program through the tunnel')
 makedepends=('meson' 'gettext')
 checkdepends=('desktop-file-utils' 'appstream')
 options=('!strip' '!debug')

@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Connect and carry traffic, best performance
-        run: python3 linux/tools/connect-check.py --timeout 240 --regions-wait 45
+        run: python3 linux/tools/connect-check.py --timeout 240 --regions-wait 150
       - name: Connect and carry traffic, exit in Germany
         run: python3 linux/tools/connect-check.py --timeout 240 --region DE
 
@@ -110,7 +110,9 @@ jobs:
           for i in $(seq 240); do grep -q '^holding' "$RUNNER_TEMP/hold.log" && break; sleep 1; done
           cat "$RUNNER_TEMP/hold.log"
           grep -q '^holding' "$RUNNER_TEMP/hold.log"
-          sudo pkill -KILL -f 'connect-check.py --vpn'
+          # The app, not the shell that started it: kill -9 runs no cleanup at all.
+          app=$(pgrep -u runner -f '^python3 linux/tools/connect-check.py --vpn')
+          sudo kill -KILL $app
           for i in $(seq 30); do
             sudo python3 linux/tools/connect-check.py --check-clean && break
             sleep 1

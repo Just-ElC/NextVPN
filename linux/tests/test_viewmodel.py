@@ -91,6 +91,20 @@ class ViewModelTests(unittest.TestCase):
         self.engine.feed('{"noticeType":"Tunnels","data":{"count":1}}')
         self.engine.set_state(TunnelState.CONNECTED)
 
+    def test_a_slow_connection_to_one_country_suggests_best_performance(self):
+        self.settings.egress_region = "JP"
+        self.vm.connect_tunnel()
+        self.engine.set_state(TunnelState.CONNECTING)
+        self.assertEqual("Finding a route that works on this network", self.vm.status_subtitle)
+        self.vm._connecting_since -= self.vm.SLOW_CONNECT_SECONDS
+        self.assertIn("Japan", self.vm.status_subtitle)
+        self.assertIn("Best performance", self.vm.status_subtitle)
+        # A redial does not restart the count; a finished attempt does.
+        self.engine.set_state(TunnelState.CONNECTING)
+        self.assertTrue(self.vm.slow_to_connect)
+        self.engine.set_state(TunnelState.DISCONNECTED)
+        self.assertFalse(self.vm.slow_to_connect)
+
     def test_in_vpn_mode_the_system_proxy_is_left_alone(self):
         # Everything already goes through the tun; pointing programs at the
         # local proxy as well would only add a hop.

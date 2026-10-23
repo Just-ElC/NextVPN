@@ -197,9 +197,9 @@ class ProfileTests(FakeSystem):
         with mock.patch.dict(os.environ, {"FAKE_NM_FAIL": "auth"}):
             with self.assertRaises(vpn.VpnError) as caught:
                 vpn.bring_up(self.uplink, uid_user=(1000, "alice"))
-        message = str(caught.exception)
-        self.assertIn("Insufficient privileges", message)
-        self.assertIn("proxy mode", message)
+        self.assertEqual("create", caught.exception.step)
+        self.assertIn("Insufficient privileges", caught.exception.detail)
+        self.assertTrue(caught.exception.denied)
 
     def test_a_failed_activation_leaves_no_profile_behind(self):
         with mock.patch.dict(os.environ, {"FAKE_NM_FAIL": "up"}):
@@ -286,7 +286,7 @@ class HelperProcessTests(FakeSystem):
         proc, out = self.start_helper()
         self.assertEqual(3, proc.wait(15))
         out.until(lambda l: "VpnSetupFailed" in l)
-        self.assertIn("No network connection", out.notices("VpnSetupFailed")[0]["message"])
+        self.assertEqual("route", out.notices("VpnSetupFailed")[0]["step"])
 
     def test_a_profile_left_by_a_crash_is_removed_before_anything_else(self):
         self.add_profile("11111111-0000-4000-8000-000000000009", "NextVPN", "tun")
@@ -381,6 +381,7 @@ class EngineVpnTests(FakeSystem):
             loop.pump_until(lambda: engine.state == TunnelState.FAULTED, timeout=20, what="faulted")
         self.assertTrue(details[-1].startswith("NetworkManager could not create the VPN interface"))
         self.assertIn("Insufficient privileges", details[-1])
+        self.assertIn("active desktop session", details[-1])
 
     def test_without_network_manager_the_proxy_mode_engine_runs(self):
         loop = Loop()

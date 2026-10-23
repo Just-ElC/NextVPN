@@ -44,6 +44,8 @@ class LogEntry:
 
 class MainViewModel(GObject.Object):
     MAX_LOG_ENTRIES = 1500
+    #: After this long without a tunnel the status line suggests what to try.
+    SLOW_CONNECT_SECONDS = 40
     MAX_RATE_SAMPLES = 64
 
     __gsignals__ = {
@@ -74,6 +76,8 @@ class MainViewModel(GObject.Object):
 
         self._proxy_target: tuple[int, int] | None = None
         self.proxy_backends: list[str] = []
+        self._connecting_since: float | None = None
+        self._slow_id = 0
 
         self.log: collections.deque[LogEntry] = collections.deque(maxlen=self.MAX_LOG_ENTRIES)
         self.rate_history: list[tuple[float, float]] = []
@@ -113,7 +117,18 @@ class MainViewModel(GObject.Object):
 
     @property
     def status_subtitle(self) -> str:
+        if self.state == TunnelState.CONNECTING and self.slow_to_connect:
+            region = self.settings.egress_region
+            if region:
+                return _("Slow to connect through {country}. “Best performance” has many more servers "
+                         "to try.").format(country=Regions.name_of(region))
+            return _("Still looking for a route. On heavily filtered networks this can take a few minutes.")
         return StatusPresenter.subtitle(self.state, self.connected_region, self.status_detail)
+
+    @property
+    def slow_to_connect(self) -> bool:
+        return (self._connecting_since is not None
+                and time.monotonic() - self._connecting_since >= self.SLOW_CONNECT_SECONDS)
 
     @property
     def action_label(self) -> str:
@@ -259,6 +274,9 @@ class MainViewModel(GObject.Object):
 
     def shutdown(self) -> None:
         self._stop_tick()
+        if self._slow_id:
+            GLib.source_remove(self._slow_id)
+            self._slow_id = 0
         self.engine.shutdown()
         if self.proxy_applied or self.proxy.is_applied:
             self.proxy.revert()
@@ -289,6 +307,17 @@ class MainViewModel(GObject.Object):
             self._start_tick()
         else:
             self._stop_tick()
+
+        # Counted from the first attempt, not from each redial within it.
+        if state == TunnelState.CONNECTING:
+            if self._connecting_since is None:
+                self._connecting_since = time.monotonic()
+                self._slow_id = GLib.timeout_add_seconds(self.SLOW_CONNECT_SECONDS, self._on_slow)
+        elif state != TunnelState.CONNECTING:
+            self._connecting_since = None
+            if self._slow_id:
+                GLib.source_remove(self._slow_id)
+                self._slow_id = 0
 
         self._apply_or_revert_proxy()
         self.emit("changed")
@@ -372,6 +401,11 @@ class MainViewModel(GObject.Object):
     def _tick(self) -> bool:
         self.emit("changed")
         return GLib.SOURCE_CONTINUE
+
+    def _on_slow(self) -> bool:
+        self._slow_id = 0
+        self.emit("changed")
+        return GLib.SOURCE_REMOVE
 
     # --------------------------------------------------------------- log
 

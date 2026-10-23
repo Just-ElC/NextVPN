@@ -78,7 +78,17 @@ FALLBACK_DNS = ("1.1.1.1", "8.8.8.8")
 
 
 class VpnError(RuntimeError):
-    """Setting up the tun failed; the message is meant for the user."""
+    """
+    Setting up the tun failed. `step` is what failed ("create" or "activate"),
+    `detail` NetworkManager's own words, and `denied` whether it was a matter of
+    permission. The app words the message; this process has no translations.
+    """
+
+    def __init__(self, step: str, detail: str, denied: bool = False):
+        self.step = step
+        self.detail = detail
+        self.denied = denied
+        super().__init__(f"NetworkManager could not {step} the VPN interface: {detail}")
 
 
 @dataclass(frozen=True)
@@ -281,14 +291,12 @@ def current_user() -> tuple[int, str]:
         return uid, str(uid)
 
 
-def _explain(result: subprocess.CompletedProcess, doing: str) -> VpnError:
+def _explain(result: subprocess.CompletedProcess, step: str) -> VpnError:
     text = (result.stderr or result.stdout or "").strip().splitlines()
     detail = text[-1] if text else f"exit code {result.returncode}"
     detail = re.sub(r"^Error:\s*", "", detail)
-    if re.search(r"insufficient privileges|not authori[sz]ed|permission denied", detail, re.I):
-        detail += (". NetworkManager lets the user of an active desktop session do this without a "
-                   "password; from anywhere else it needs a polkit rule, or use proxy mode")
-    return VpnError(f"NetworkManager could not {doing}: {detail}")
+    denied = bool(re.search(r"insufficient privileges|not authori[sz]ed|permission denied", detail, re.I))
+    return VpnError(step, detail, denied)
 
 
 def our_connections(run=_run) -> list[str]:
@@ -326,12 +334,12 @@ def bring_up(uplink: Uplink, run=_run, uid_user: tuple[int, str] | None = None) 
         added = run(["nmcli", "connection", "add", "save", "no", "type", "tun",
                      *profile_settings(uplink, uid, user)], timeout=30)
     except (OSError, subprocess.TimeoutExpired) as ex:
-        raise VpnError(f"NetworkManager could not create the VPN interface: {ex}") from None
+        raise VpnError("create", str(ex)) from None
     if added.returncode != 0:
-        raise _explain(added, "create the VPN interface")
+        raise _explain(added, "create")
     match = re.search(r"\(([0-9a-fA-F-]{36})\)", added.stdout)
     if not match:
-        raise VpnError("NetworkManager created the VPN interface but did not say which one it is")
+        raise VpnError("create", f"no profile id in its answer: {added.stdout.strip()}")
     uuid = match.group(1)
 
     try:
@@ -340,7 +348,7 @@ def bring_up(uplink: Uplink, run=_run, uid_user: tuple[int, str] | None = None) 
         up = subprocess.CompletedProcess([], 1, "", str(ex))
     if up.returncode != 0:
         tear_down(uuid, run)
-        raise _explain(up, "bring the VPN interface up")
+        raise _explain(up, "activate")
     return uuid
 
 
