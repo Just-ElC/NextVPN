@@ -52,7 +52,7 @@ start_engine() {
 }
 
 summary() {
-  grep -E '"noticeType":"(ActiveTunnel|ConnectedServerRegion|Tunnels|Alert|Error|Warning)"' "$WORK/notices.log" | cut -c1-300 | tail -25
+  grep -E '"noticeType":"(ActiveTunnel|ConnectedServerRegion|Tunnels|Alert|Error)"' "$WORK/notices.log" | cut -c1-300 | tail -15
   grep -E 'PacketTunnel|packet tunnel' "$WORK/notices.log" | cut -c1-300 | tail -10
 }
 
