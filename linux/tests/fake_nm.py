@@ -29,7 +29,10 @@ def profiles() -> dict:
 
 
 def save(p: dict) -> None:
-    (state / "profiles.json").write_text(json.dumps(p))
+    # Atomically: the test reads this file while the helper changes it.
+    tmp = state / f"profiles.json.{os.getpid()}"
+    tmp.write_text(json.dumps(p))
+    os.replace(tmp, state / "profiles.json")
 
 
 def uplink() -> dict:

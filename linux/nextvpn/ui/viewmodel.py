@@ -16,12 +16,12 @@ from datetime import datetime
 
 from gi.repository import GLib, GObject
 
-from ..core import fmt, system_proxy
+from ..core import fmt, paths, system_proxy
 from ..core.engine import EngineOutput, TunnelEngine
 from ..core.i18n import _
 from ..core.notice import Notice, NoticeType
 from ..core.policy import NoticeLevel, NoticePolicy
-from ..core.regions import RegionInfo, Regions
+from ..core.regions import RegionInfo, Regions, embedded_regions
 from ..core.settings import AppSettings, ConnectionMode
 from ..core.status import StatusPresenter, TunnelState
 from ..core.system_proxy import SystemProxy
@@ -86,7 +86,9 @@ class MainViewModel(GObject.Object):
 
         self.selected_region = Regions.describe(settings.egress_region)
         self.available_regions: list[RegionInfo] = []
-        self._rebuild_regions(settings.known_regions)
+        # Until the engine has reported once, the countries of the built-in
+        # servers: the engine starts from exactly those.
+        self._rebuild_regions(settings.known_regions or embedded_regions(paths.engine().server_list))
 
         self.engine.state_changed.connect(self._on_state_changed)
         self.engine.notice_received.connect(self._on_notice)

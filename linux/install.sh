@@ -51,13 +51,13 @@ if [ "$distro" = nixos ]; then
 fi
 
 case "$distro" in
-  fedora) packages="python3-gobject python3-cairo gtk4 libadwaita gsettings-desktop-schemas meson gettext"
+  fedora) packages="python3-gobject python3-cairo gtk4 libadwaita gsettings-desktop-schemas iproute meson gettext"
           install_cmd="sudo dnf install -y $packages" ;;
-  arch)   packages="python-gobject python-cairo gtk4 libadwaita gsettings-desktop-schemas meson gettext"
+  arch)   packages="python-gobject python-cairo gtk4 libadwaita gsettings-desktop-schemas iproute2 meson gettext"
           install_cmd="sudo pacman -S --needed --noconfirm $packages" ;;
-  debian) packages="python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1 gsettings-desktop-schemas meson gettext"
+  debian) packages="python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1 gsettings-desktop-schemas iproute2 meson gettext"
           install_cmd="sudo apt-get install -y $packages" ;;
-  suse)   packages="python3-gobject python3-gobject-cairo typelib-1_0-Gtk-4_0 typelib-1_0-Adw-1 gsettings-desktop-schemas meson gettext-tools"
+  suse)   packages="python3-gobject python3-gobject-cairo typelib-1_0-Gtk-4_0 typelib-1_0-Adw-1 gsettings-desktop-schemas iproute2 meson gettext-tools"
           install_cmd="sudo zypper install -y $packages" ;;
   *)      packages="PyGObject, pycairo, GTK 4, libadwaita, meson, gettext"
           install_cmd="" ;;

@@ -101,16 +101,16 @@
 
 Версия для Linux на GTK 4 и libadwaita: тот же движок, **те же серверы** и все те же
 возможности — одна кнопка, выбор страны, трей, автозапуск, светлая и тёмная тема.
-Системный прокси включается в GNOME и KDE Plasma. Подробности — в
-[linux/README.md](linux/README.md).
+В режиме VPN через туннель идут все программы в любом окружении, от GNOME и KDE
+до Hyprland (caelestia), Sway и niri. Подробности — в [linux/README.md](linux/README.md).
 
 | Система | Скачать | Установить |
 |---|---|---|
-| **Fedora** 40+ | [nextvpn-1.0.0-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn-1.0.0-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.0.0-1.x86_64.rpm` |
-| **CachyOS, Arch, Manjaro** | [nextvpn-1.0.0-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn-1.0.0-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.0.0-1-x86_64.pkg.tar.zst` |
-| **Ubuntu** 24.04+, **Debian** 13+ | [nextvpn_1.0.0-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/nextvpn_1.0.0-1_amd64.deb) | `sudo apt install ./nextvpn_1.0.0-1_amd64.deb` |
+| **Fedora** 40+ | [nextvpn-1.1.0-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn-1.1.0-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.1.0-1.x86_64.rpm` |
+| **CachyOS, Arch, Manjaro** | [nextvpn-1.1.0-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn-1.1.0-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.1.0-1-x86_64.pkg.tar.zst` |
+| **Ubuntu** 24.04+, **Debian** 13+ | [nextvpn_1.1.0-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn_1.1.0-1_amd64.deb) | `sudo apt install ./nextvpn_1.1.0-1_amd64.deb` |
 | **NixOS** | — | `nix run github:Just-ElC/NextVPN` или модуль `programs.nextvpn.enable = true` |
-| Другие | [NextVPN-1.0.0-linux.tar.gz](https://github.com/Just-ElC/NextVPN/releases/download/v1.0.0-linux/NextVPN-1.0.0-linux.tar.gz) | распаковать, затем `linux/install.sh --deps && linux/install.sh` |
+| Другие | [NextVPN-1.1.0-linux.tar.gz](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/NextVPN-1.1.0-linux.tar.gz) | распаковать, затем `linux/install.sh --deps && linux/install.sh` |
 
 ---
 
@@ -135,7 +135,7 @@
 Браузеры и большинство приложений — сразу. Отдельные игры и программы, которые не смотрят на сетевые настройки Windows, могут ходить в обход.
 
 **А в Linux?**  
-Браузеры и программы, которые берут системный прокси GNOME или KDE, — сразу. Для терминала NextVPN даёт готовую команду с переменными прокси (кнопка у «Локального прокси»). В GNOME для значка в трее нужно расширение AppIndicator.
+Да, во всех: в режиме VPN (по умолчанию) через туннель идут все программы, игры и терминал, вместе с DNS, в любом окружении. Нужен NetworkManager — он есть почти везде; без него NextVPN включает системный прокси GNOME или KDE. В GNOME для значка в трее нужно расширение AppIndicator.
 
 ---
 

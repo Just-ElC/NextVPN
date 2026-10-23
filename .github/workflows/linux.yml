@@ -147,6 +147,8 @@ jobs:
           sudo apt-get install -y ./dist/nextvpn_*_amd64.deb
           nextvpn --version
           test -x /usr/libexec/nextvpn/psiphon-tunnel-core
+          # The VPN helper runs from the installed package, as the app starts it.
+          PYTHONPATH=/usr/share/nextvpn python3 -m nextvpn.core.vpn_helper 2>&1 | grep -q '^usage:'
       - uses: actions/upload-artifact@v4
         with:
           name: deb
@@ -174,6 +176,8 @@ jobs:
           dnf install -y ./dist/nextvpn-*.rpm
           nextvpn --version
           test -x /usr/libexec/nextvpn/psiphon-tunnel-core
+          # The VPN helper runs from the installed package, as the app starts it.
+          PYTHONPATH=/usr/share/nextvpn python3 -m nextvpn.core.vpn_helper 2>&1 | grep -q '^usage:'
       - uses: actions/upload-artifact@v4
         with:
           name: rpm
@@ -202,6 +206,8 @@ jobs:
           pacman -U --noconfirm dist/nextvpn-*.pkg.tar.zst
           nextvpn --version
           test -x /usr/lib/nextvpn/psiphon-tunnel-core
+          # The VPN helper runs from the installed package, as the app starts it.
+          PYTHONPATH=/usr/share/nextvpn python3 -m nextvpn.core.vpn_helper 2>&1 | grep -q '^usage:'
       - uses: actions/upload-artifact@v4
         with:
           name: arch

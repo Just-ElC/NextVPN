@@ -94,6 +94,7 @@ class Helper:
         self.uplink: vpn.Uplink | None = None
         self.connected = threading.Event()
         self._checked_dns = False
+        self.parent = os.getppid()
 
     # ---------------------------------------------------------------- run
 
@@ -129,11 +130,20 @@ class Helper:
         if self.stop.is_set() or not self._start_engine():
             return 0 if self.stop.is_set() else 5
 
-        while not self.stop.wait(POLL_SECONDS):
+        waited = 0.0
+        while not self.stop.wait(1.0):
+            # The parent-death signal is the fast path; this catches the app
+            # going away however it went, a second later at most.
+            if os.getppid() != self.parent:
+                return 0
+            # An engine that gives up is noticed at once, the uplink every few seconds.
             code = self.proc.poll()
             if code is not None:
                 return code
-            self._follow_uplink()
+            waited += 1.0
+            if waited >= POLL_SECONDS:
+                waited = 0.0
+                self._follow_uplink()
             if self.connected.is_set() and not self._checked_dns:
                 self._checked_dns = True
                 threading.Thread(target=self._check_dns, daemon=True).start()
