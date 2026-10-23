@@ -42,7 +42,7 @@ start_engine() {
     -tunDevice nvpn0 -tunBindInterface "$IFACE" -tunDNSServers "$DNS" 2> "$WORK/notices.log" &
   ENGINE_PID=$!
   for i in $(seq 1 240); do
-    if grep -q '"noticeType":"Tunnels","data":{"count":1}' "$WORK/notices.log"; then
+    if grep -q '"count":1},"noticeType":"Tunnels"' "$WORK/notices.log"; then
       echo "tunnel up after ${i}s"; return 0
     fi
     if ! kill -0 $ENGINE_PID 2>/dev/null; then echo "engine exited"; tail -40 "$WORK/notices.log"; return 1; fi
