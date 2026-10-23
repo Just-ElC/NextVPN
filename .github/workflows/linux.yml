@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Connect and carry traffic, best performance
-        run: python3 linux/tools/connect-check.py --timeout 240 --regions-wait 150
+        run: python3 linux/tools/connect-check.py --timeout 240 --regions-wait 30
       - name: Connect and carry traffic, exit in Germany
         run: python3 linux/tools/connect-check.py --timeout 240 --region DE
 
@@ -79,10 +79,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: NetworkManager, managing nothing but the VPN interface
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends network-manager dnsutils
+          # Written before the package is installed: NetworkManager starts as
+          # soon as it is, and must never touch the runner's own network.
+          sudo mkdir -p /etc/NetworkManager/conf.d
           printf '[main]\ndns=systemd-resolved\n[keyfile]\nunmanaged-devices=*,except:interface-name:nextvpn0\n' |
             sudo tee /etc/NetworkManager/conf.d/99-nextvpn-ci.conf
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends network-manager dnsutils
           # On a desktop, polkit lets the user of the active session manage
           # their own profiles. The runner has no such session; this grants the
           # same and nothing more.
