@@ -28,13 +28,13 @@ Windows-версия (`Windows_<версия>_NextVPN`), и получает о�
 
 ### Готовые пакеты
 
-Из [релиза для Linux](https://github.com/Just-ElC/NextVPN/releases/tag/v1.1.0-linux):
+Из [релиза для Linux](https://github.com/Just-ElC/NextVPN/releases/tag/v1.1.1-linux):
 
 | Система | Файл | Команда |
 |---|---|---|
-| Fedora 40+ | [nextvpn-1.1.0-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn-1.1.0-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.1.0-1.x86_64.rpm` |
-| CachyOS, Arch, EndeavourOS, Manjaro | [nextvpn-1.1.0-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn-1.1.0-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.1.0-1-x86_64.pkg.tar.zst` |
-| Ubuntu 24.04+, Debian 13+, Mint 22+ | [nextvpn_1.1.0-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn_1.1.0-1_amd64.deb) | `sudo apt install ./nextvpn_1.1.0-1_amd64.deb` |
+| Fedora 40+ | [nextvpn-1.1.1-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/nextvpn-1.1.1-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.1.1-1.x86_64.rpm` |
+| CachyOS, Arch, EndeavourOS, Manjaro | [nextvpn-1.1.1-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/nextvpn-1.1.1-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.1.1-1-x86_64.pkg.tar.zst` |
+| Ubuntu 24.04+, Debian 13+, Mint 22+ | [nextvpn_1.1.1-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/nextvpn_1.1.1-1_amd64.deb) | `sudo apt install ./nextvpn_1.1.1-1_amd64.deb` |
 
 Ниже — как собрать то же самое из исходников.
 
@@ -90,16 +90,27 @@ nix run github:Just-ElC/NextVPN
 приложений её нет. Чтобы она появилась в меню (и в лаунчере caelestia) со своим
 значком, поставьте её модулем выше или `nix profile install github:Just-ElC/NextVPN`.
 
+Модуль собирает программу из nixpkgs самой системы: GTK тогда берёт те же
+драйверы Mesa и Vulkan, что и система, и рисует видеокартой. `nix run` и
+`nix profile install` используют nixpkgs этого flake; если он заметно новее или
+старее системного, GTK может не найти драйвер и рисовать процессором — тогда
+анимации дёргаются. В «Настройки → О программе → Отрисовка» видно, как рисуется
+окно; если там написано «без видеокарты», запустите с nixpkgs системы:
+
+```sh
+nix run github:Just-ElC/NextVPN --override-input nixpkgs nixpkgs
+```
+
 Пакет также доступен как `nextvpn.packages.<system>.nextvpn` и через
-`nextvpn.overlays.default`. На aarch64 движок собирается из исходников той же
-ревизии.
+`nextvpn.overlays.default` (тоже собирает из nixpkgs, к которому применён). На
+aarch64 движок собирается из исходников той же ревизии.
 
 ### Ubuntu, Debian
 
 ```sh
 sudo apt install meson gettext dpkg-dev
 linux/packaging/debian/build-deb.sh
-sudo apt install ./nextvpn_1.1.0-1_amd64.deb
+sudo apt install ./nextvpn_1.1.1-1_amd64.deb
 ```
 
 ### Любой другой дистрибутив (openSUSE и т.д.)
@@ -199,7 +210,11 @@ iproute2; для режима VPN — NetworkManager; для сборки — me
 Cinnamon, Budgie, LXQt, waybar, caelestia и другие оболочки на quickshell — сразу,
 в том числе при запуске через `nix run` или из исходников. В **GNOME** нужно
 расширение AppIndicator (в Fedora — `gnome-shell-extension-appindicator`, в
-Ubuntu уже включено). Без трея закрытие окна завершает программу.
+Ubuntu уже включено).
+
+Кнопка закрытия завершает программу (туннель при этом отключается). Чтобы
+закрытие прятало окно в трей, а туннель продолжал работать, включите «Настройки →
+Запуск и окно → Оставаться в области уведомлений». Выйти можно и из меню значка.
 
 Левый щелчок по значку — показать/скрыть окно, средний — подключить/отключить,
 правый — меню.
@@ -235,6 +250,9 @@ nextvpn --quit          отключить и закрыть запущенну�
 
 - **Журнал** (последняя вкладка) показывает всё, что делает движок; кнопка
   «Копировать всё» — для вопроса в issues.
+- Анимации резкие и дёргаются — посмотрите «Настройки → О программе → Отрисовка».
+  «Без видеокарты» значит, что GTK не нашёл драйвер (на NixOS — см. раздел NixOS
+  выше; в других системах — установлены ли драйверы Mesa).
 - Подключение висит долго — выберите «Самая быстрая» или включите «Увеличить таймауты подключения»
   в настройках.
 - Режим VPN не включается из-за прав — NetworkManager разрешает это без пароля

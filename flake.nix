@@ -31,8 +31,14 @@
         };
       });
 
+      # Builds the app from the nixpkgs it is applied to, so GTK comes from the
+      # same set as the system's graphics drivers. The engine is a static binary
+      # and is taken from this flake as it is.
       overlays.default = final: _prev: {
-        nextvpn = self.packages.${final.stdenv.hostPlatform.system}.nextvpn;
+        nextvpn = final.callPackage ./linux/packaging/nix/package.nix {
+          psiphon-tunnel-core = self.packages.${final.stdenv.hostPlatform.system}.psiphon-tunnel-core;
+          nextvpnSource = self;
+        };
       };
 
       nixosModules.default = import ./linux/packaging/nix/module.nix self;

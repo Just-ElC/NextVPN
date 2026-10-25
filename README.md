@@ -106,11 +106,11 @@
 
 | Система | Скачать | Установить |
 |---|---|---|
-| **Fedora** 40+ | [nextvpn-1.1.0-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn-1.1.0-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.1.0-1.x86_64.rpm` |
-| **CachyOS, Arch, Manjaro** | [nextvpn-1.1.0-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn-1.1.0-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.1.0-1-x86_64.pkg.tar.zst` |
-| **Ubuntu** 24.04+, **Debian** 13+ | [nextvpn_1.1.0-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/nextvpn_1.1.0-1_amd64.deb) | `sudo apt install ./nextvpn_1.1.0-1_amd64.deb` |
+| **Fedora** 40+ | [nextvpn-1.1.1-1.x86_64.rpm](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/nextvpn-1.1.1-1.x86_64.rpm) | `sudo dnf install ./nextvpn-1.1.1-1.x86_64.rpm` |
+| **CachyOS, Arch, Manjaro** | [nextvpn-1.1.1-1-x86_64.pkg.tar.zst](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/nextvpn-1.1.1-1-x86_64.pkg.tar.zst) | `sudo pacman -U nextvpn-1.1.1-1-x86_64.pkg.tar.zst` |
+| **Ubuntu** 24.04+, **Debian** 13+ | [nextvpn_1.1.1-1_amd64.deb](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/nextvpn_1.1.1-1_amd64.deb) | `sudo apt install ./nextvpn_1.1.1-1_amd64.deb` |
 | **NixOS** | — | `nix run github:Just-ElC/NextVPN` или модуль `programs.nextvpn.enable = true` |
-| Другие | [NextVPN-1.1.0-linux.tar.gz](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.0-linux/NextVPN-1.1.0-linux.tar.gz) | распаковать, затем `linux/install.sh --deps && linux/install.sh` |
+| Другие | [NextVPN-1.1.1-linux.tar.gz](https://github.com/Just-ElC/NextVPN/releases/download/v1.1.1-linux/NextVPN-1.1.1-linux.tar.gz) | распаковать, затем `linux/install.sh --deps && linux/install.sh` |
 
 ---
 

@@ -255,6 +255,8 @@ class TrayIcon(GObject.Object):
         for reg in self._registered_ids:
             self._bus.unregister_object(reg)
         self._registered_ids = []
+        # Gone from the panel: nothing more to tell it, however the app goes on.
+        self._bus = None
 
     # ------------------------------------------------------------- export
 

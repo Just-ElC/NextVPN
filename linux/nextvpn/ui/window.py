@@ -1,4 +1,4 @@
-"""The main window: a header with the live status, four pages, and toasts."""
+"""The main window: a header with the page switcher, four pages, and toasts."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from gi.repository import Adw, Gio, GLib, Gtk
 
 from .. import APP_NAME
 from ..core.i18n import _
-from ..core.status import TunnelState
+from . import diagnostics
 from .home import HomePage
 from .log_page import LogPage
 from .regions_page import RegionsPage
@@ -48,17 +48,6 @@ class MainWindow(Adw.ApplicationWindow):
         self.switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
         header.set_title_widget(self.switcher)
 
-        # Live status, always visible whichever page is open.
-        status = Gtk.Box(spacing=8, valign=Gtk.Align.CENTER)
-        status.add_css_class("status-pill")
-        self.status_dot = Gtk.Box(valign=Gtk.Align.CENTER)
-        self.status_dot.add_css_class("status-dot")
-        self.status_label = Gtk.Label()
-        self.status_label.add_css_class("caption-heading")
-        status.append(self.status_dot)
-        status.append(self.status_label)
-        header.pack_start(status)
-
         menu = Gio.Menu()
         menu.append(_("About NextVPN"), "app.about")
         menu.append(_("Quit"), "app.quit")
@@ -92,8 +81,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         # --------------------------------------------------------- events
         self.connect("close-request", self._on_close_request)
-        vm.connect("changed", lambda *_: self._update_status())
-        self._update_status()
+        self.connect("realize", lambda *_: GLib.idle_add(self._report_renderer))
 
         shortcuts = Gtk.ShortcutController()
         for key, page in (("<Alt>1", "home"), ("<Alt>2", "regions"), ("<Alt>3", "settings"), ("<Alt>4", "log")):
@@ -117,19 +105,13 @@ class MainWindow(Adw.ApplicationWindow):
     def toast(self, text: str) -> None:
         self.toasts.add_toast(Adw.Toast.new(text))
 
-    # ------------------------------------------------------------- status
+    # ---------------------------------------------------------- rendering
 
-    def _update_status(self) -> None:
-        state = self.vm.state
-        self.status_label.set_label(self.vm.status_text)
-        for css in ("connected", "busy", "faulted"):
-            self.status_dot.remove_css_class(css)
-        if state == TunnelState.CONNECTED:
-            self.status_dot.add_css_class("connected")
-        elif state in (TunnelState.CONNECTING, TunnelState.DISCONNECTING):
-            self.status_dot.add_css_class("busy")
-        elif state == TunnelState.FAULTED:
-            self.status_dot.add_css_class("faulted")
+    def _report_renderer(self) -> bool:
+        renderer = self.get_renderer()
+        if renderer is not None:
+            self.vm.set_renderer(renderer.__gtype__.name, diagnostics.gl_driver(self.get_display()))
+        return GLib.SOURCE_REMOVE
 
     # ------------------------------------------------------- window state
 
@@ -138,16 +120,24 @@ class MainWindow(Adw.ApplicationWindow):
         self.present()
 
     def keeps_running_when_closed(self) -> bool:
-        return (self.vm.settings.minimise_to_tray and self.tray is not None and self.tray.available)
+        return self.vm.settings.close_to_tray and self.tray_available()
+
+    def tray_available(self) -> bool:
+        return self.tray is not None and self.tray.available
 
     def _on_close_request(self, *_):
-        self.save_geometry()
-        # The close button parks the app in the tray rather than tearing the tunnel
-        # down, unless the user chose otherwise or there is no tray to park in.
-        if self.really_closing or not self.keeps_running_when_closed():
-            GLib.idle_add(lambda: (self.get_application().quit_app(), False)[1])
+        if self.really_closing:
             return False
-        self.set_visible(False)
+        # The close button quits, unless the user asked for it to park the app in
+        # the tray and there is a tray to park in.
+        if self.keeps_running_when_closed():
+            self.save_geometry()
+            self.set_visible(False)
+            return True
+        # Quitting hides the window at once and it goes with the app. Letting
+        # GTK destroy it here would detach it from the app before the quit
+        # could be asked for, leaving the app running with no window.
+        self.get_application().quit_app()
         return True
 
     def save_geometry(self) -> None:

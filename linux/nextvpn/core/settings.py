@@ -100,7 +100,10 @@ class AppSettings:
     start_at_login: bool = False
     connect_on_launch: bool = False
     start_minimised: bool = False
-    minimise_to_tray: bool = True
+    #: The close button hides the window to the tray instead of quitting. Off by
+    #: default: closing a window should close the app. (Until 1.1.0 this was
+    #: minimise_to_tray, on by default; that key is no longer read.)
+    close_to_tray: bool = False
 
     # --- Appearance --------------------------------------------------------
     theme: AppTheme = AppTheme.SYSTEM

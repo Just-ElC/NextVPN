@@ -37,11 +37,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1 gsettings-desktop-schemas \
-            meson ninja-build gettext desktop-file-utils appstream dbus
+            meson ninja-build gettext desktop-file-utils appstream dbus xvfb
       - name: Unit tests, desktop file, metainfo
         run: |
           meson setup _build
-          dbus-run-session -- meson test -C _build --print-errorlogs
+          NEXTVPN_DESKTOP_TESTS=1 xvfb-run -a dbus-run-session -- meson test -C _build --print-errorlogs
       - name: The real engine starts and stops
         working-directory: linux
         run: NEXTVPN_REAL_ENGINE_TEST=1 python3 -m unittest -v tests.test_engine.RealEngineSmokeTest
@@ -231,6 +231,32 @@ jobs:
           nix build -L --impure --expr \
             '(builtins.getFlake (toString ./.)).packages.x86_64-linux.psiphon-tunnel-core.override { fromSource = true; }'
           ./result/bin/psiphon-tunnel-core -v
+      - name: Build through the overlay, as from a system's own nixpkgs
+        run: |
+          nix build -L --impure --out-link result-overlay --expr '
+            let f = builtins.getFlake (toString ./.);
+            in (import f.inputs.nixpkgs { system = "x86_64-linux"; overlays = [ f.overlays.default ]; }).nextvpn'
+          ./result-overlay/bin/nextvpn --version
+      - name: Evaluate a NixOS system with the module
+        run: |
+          nix eval --impure --raw --expr '
+            let
+              f = builtins.getFlake (toString ./.);
+              lib = f.inputs.nixpkgs.lib;
+            in
+            (lib.nixosSystem {
+              modules = [
+                f.nixosModules.default
+                {
+                  nixpkgs.hostPlatform = "x86_64-linux";
+                  programs.nextvpn.enable = true;
+                  networking.networkmanager.enable = true;
+                  boot.loader.grub.enable = false;
+                  fileSystems."/" = { device = "nodev"; fsType = "tmpfs"; };
+                  system.stateVersion = lib.trivial.release;
+                }
+              ];
+            }).config.system.build.toplevel.drvPath'
       - name: Flake check
         run: nix flake check --all-systems --no-build
 

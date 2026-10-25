@@ -25,6 +25,7 @@ from ..core.regions import RegionInfo, Regions, embedded_regions
 from ..core.settings import AppSettings, ConnectionMode
 from ..core.status import StatusPresenter, TunnelState
 from ..core.system_proxy import SystemProxy
+from . import diagnostics
 
 
 @dataclass(frozen=True)
@@ -78,6 +79,10 @@ class MainViewModel(GObject.Object):
         self.proxy_backends: list[str] = []
         self._connecting_since: float | None = None
         self._slow_id = 0
+        #: How GTK draws the window, once it is known: the GSK renderer and the
+        #: OpenGL driver underneath it.
+        self.renderer: str | None = None
+        self.gl_driver: str | None = None
 
         self.log: collections.deque[LogEntry] = collections.deque(maxlen=self.MAX_LOG_ENTRIES)
         self.rate_history: list[tuple[float, float]] = []
@@ -273,6 +278,68 @@ class MainViewModel(GObject.Object):
 
     def log_text(self) -> str:
         return "\n".join(entry.as_line() for entry in self.log) + ("\n" if self.log else "")
+
+    @property
+    def software_rendering(self) -> bool:
+        return diagnostics.is_software(self.renderer, self.gl_driver)
+
+    @property
+    def renderer_text(self) -> str:
+        if not self.renderer:
+            return ""
+        if self.gl_driver and self.renderer != "GskCairoRenderer":
+            return f"{self.renderer}, {self.gl_driver}"
+        return self.renderer
+
+    def set_renderer(self, renderer: str, gl_driver: str | None = None) -> None:
+        """
+        Records how GTK draws the window. Drawing without the graphics card makes
+        every animation stutter, and the cause is outside the app, so it is said
+        plainly in the log, with what usually fixes it.
+        """
+        self.renderer = renderer
+        self.gl_driver = gl_driver
+        if self.software_rendering:
+            self.append_log(NoticeLevel.WARNING, "Client", _(
+                "The window is drawn without the graphics card ({renderer}), so animations will stutter. "
+                "GTK does this when it cannot use the graphics driver. On NixOS that happens when the app "
+                "was built from a different nixpkgs than the system: install it with the NixOS module, or "
+                "start it with nix run github:Just-ElC/NextVPN --override-input nixpkgs nixpkgs."
+            ).format(renderer=self.renderer_text))
+        else:
+            self.append_log(NoticeLevel.INFO, "Client",
+                            _("Drawing with {renderer}").format(renderer=self.renderer_text))
+        self.emit("changed")
+
+    def stop_for_exit(self, done) -> None:
+        """
+        Ends the session without blocking the main loop and calls done() once the
+        engine is gone, or once it has had its grace period. The window is already
+        hidden by then; in VPN mode handing the tun back takes a second or two,
+        and a frozen window in the meantime reads as an app that will not close.
+        """
+        engine = self.engine
+        if not getattr(engine, "is_running", False):
+            GLib.idle_add(lambda: (done(), GLib.SOURCE_REMOVE)[1])
+            return
+
+        finished = []
+
+        def finish(*_):
+            if not finished:
+                finished.append(True)
+                engine.state_changed.disconnect(on_state)
+                done()
+            return GLib.SOURCE_REMOVE
+
+        def on_state(state, _detail):
+            if state in (TunnelState.DISCONNECTED, TunnelState.FAULTED):
+                GLib.idle_add(finish)
+
+        engine.state_changed.connect(on_state)
+        grace = engine.VPN_STOP_GRACE_SECONDS if engine.vpn_mode else engine.STOP_GRACE_SECONDS
+        GLib.timeout_add_seconds(int(grace) + 2, finish)
+        engine.stop()
 
     def shutdown(self) -> None:
         self._stop_tick()

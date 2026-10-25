@@ -85,6 +85,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.1.1" date="2026-10-25">
+      <description>
+        <p>Closing the window quits the app, as on any other desktop program; keeping it in the tray is a setting. Settings and the log say whether the window is drawn with the graphics card, and what helps on NixOS when it is not. The status pill in the header is gone.</p>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-10-23">
       <description>
         <p>VPN mode: every program, game and terminal goes through the tunnel, DNS included, on any desktop, Hyprland and other window managers too. NetworkManager sets the interface up; no password is asked.</p>

@@ -11,7 +11,6 @@
 @define-color state_ok #0FA97B;
 @define-color state_warn #B7791F;
 @define-color state_bad #D64545;
-@define-color state_idle #6B7280;
 @define-color graph_up #2F7FD1;
 
 /* One spacing rhythm for the whole application: 12px between cards, 14px
@@ -144,19 +143,6 @@ button.tiny {
   min-height: 24px;
   padding: 0;
 }
-
-/* ------------------------------------------------------------- status */
-
-.status-dot {
-  min-width: 8px;
-  min-height: 8px;
-  border-radius: 9999px;
-  background-color: @state_idle;
-}
-
-.status-dot.connected { background-color: #2EE6A8; }
-.status-dot.busy      { background-color: #F2B441; }
-.status-dot.faulted   { background-color: #FF6B6B; }
 
 /* ------------------------------------------------------------ notices */
 
