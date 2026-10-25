@@ -168,7 +168,7 @@ class SettingsPage(Adw.PreferencesPage):
     def _build_startup(self):
         group = Adw.PreferencesGroup(title=_("Startup and window"))
         self.tray_row = self._switch(group, _("Keep running in the notification area"), "",
-                                     "minimise_to_tray", self._local_changed)
+                                     "close_to_tray", self._local_changed)
         self._switch(group, _("Start in the notification area"), _("Launch without showing the window."),
                      "start_minimised", self._local_changed)
         self._switch(group, _("Connect on launch"), _("Start the tunnel as soon as the app opens."),
@@ -202,6 +202,10 @@ class SettingsPage(Adw.PreferencesPage):
         group.add(self.engine_row)
         threading.Thread(target=self._query_engine, daemon=True).start()
 
+        self.renderer_row = Adw.ActionRow(title=_("Drawing"), subtitle=_("Checking…"))
+        self.renderer_row.set_subtitle_selectable(True)
+        group.add(self.renderer_row)
+
         licence = Adw.ActionRow(
             title=_("Psiphon"),
             subtitle=_("Circumvention is provided by psiphon-tunnel-core, the open source engine from "
@@ -229,6 +233,15 @@ class SettingsPage(Adw.PreferencesPage):
     # ------------------------------------------------------------ refresh
 
     def _refresh(self):
+        if self.vm.renderer:
+            if self.vm.software_rendering:
+                text = _("{renderer}: without the graphics card, so animations stutter. See Activity for why "
+                         "and what helps.").format(renderer=self.vm.renderer_text)
+            else:
+                text = self.vm.renderer_text
+            if self.renderer_row.get_subtitle() != text:
+                self.renderer_row.set_subtitle(text)
+
         label = self.vm.selected_region.display
         if self.region_button.get_label() != label:
             self.region_button.set_label(label)
@@ -268,8 +281,8 @@ class SettingsPage(Adw.PreferencesPage):
     def _refresh_tray(self):
         available = self.tray is not None and self.tray.available
         if available:
-            self.tray_row.set_subtitle(_("Closing the window parks the app in the tray instead of quitting. "
-                                         "Turn this off and the close button really quits."))
+            self.tray_row.set_subtitle(_("The close button hides the window to the tray and the tunnel stays up. "
+                                         "Off, the close button quits."))
         else:
             self.tray_row.set_subtitle(_("No notification area was found on this desktop, so closing the window "
                                          "quits. On GNOME, install the AppIndicator extension."))

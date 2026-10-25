@@ -27,7 +27,7 @@ let
 in
 stdenv.mkDerivation {
   pname = "nextvpn";
-  version = "1.1.0";
+  version = "1.1.1";
   src = nextvpnSource;
 
   nativeBuildInputs = [

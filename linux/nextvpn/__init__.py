@@ -9,4 +9,4 @@ try:
     VERSION = _build.VERSION
 except ImportError:  # pragma: no cover - depends on how the app was started
     _build = None
-    VERSION = "1.1.0"
+    VERSION = "1.1.1"

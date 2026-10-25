@@ -10,7 +10,7 @@
 %global app_id io.github.just_elc.NextVPN
 
 Name:           nextvpn
-Version:        1.1.0
+Version:        1.1.1
 Release:        1%{?dist}
 Summary:        Free internet in one click: a GTK client for the Psiphon network
 
@@ -74,6 +74,11 @@ tunnel; without it, the GNOME and KDE system proxy is set while connected.
 %{_datadir}/icons/hicolor/scalable/status/nextvpn-tray-*.svg
 
 %changelog
+* Sun Oct 25 2026 NextOS - 1.1.1-1
+- Closing the window quits the app; staying in the tray is an option
+- Settings and the log show whether drawing uses the graphics card
+- No status pill in the header
+
 * Fri Oct 23 2026 NextOS - 1.1.0-1
 - VPN mode: every program goes through the tunnel, through NetworkManager
 - Engine built from upstream psiphon-tunnel-core of 2026-10-20

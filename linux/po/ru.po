@@ -299,9 +299,6 @@ msgstr "Запуск и окно"
 msgid "Keep running in the notification area"
 msgstr "Оставаться в области уведомлений"
 
-msgid "Closing the window parks the app in the tray instead of quitting. Turn this off and the close button really quits."
-msgstr "При закрытии окна приложение сворачивается в трей, а не завершается. Выключите — и кнопка закрытия будет действительно закрывать программу."
-
 msgid "No notification area was found on this desktop, so closing the window quits. On GNOME, install the AppIndicator extension."
 msgstr "Область уведомлений на этом рабочем столе не найдена, поэтому закрытие окна завершает программу. В GNOME установите расширение AppIndicator."
 
@@ -702,3 +699,18 @@ msgstr "Долго подключается через страну «{country}�
 
 msgid "Still looking for a route. On heavily filtered networks this can take a few minutes."
 msgstr "Всё ещё ищем путь. В сильно фильтруемых сетях это может занять несколько минут."
+
+msgid "Drawing"
+msgstr "Отрисовка"
+
+msgid "Drawing with {renderer}"
+msgstr "Отрисовка: {renderer}"
+
+msgid "The close button hides the window to the tray and the tunnel stays up. Off, the close button quits."
+msgstr "Кнопка закрытия прячет окно в трей, и туннель продолжает работать. Если выключено, кнопка закрытия завершает программу."
+
+msgid "The window is drawn without the graphics card ({renderer}), so animations will stutter. GTK does this when it cannot use the graphics driver. On NixOS that happens when the app was built from a different nixpkgs than the system: install it with the NixOS module, or start it with nix run github:Just-ElC/NextVPN --override-input nixpkgs nixpkgs."
+msgstr "Окно рисуется без видеокарты ({renderer}), поэтому анимации будут дёргаться. GTK так делает, когда не может использовать графический драйвер. На NixOS это бывает, когда программа собрана из другого nixpkgs, чем система: установите её модулем NixOS или запускайте так: nix run github:Just-ElC/NextVPN --override-input nixpkgs nixpkgs."
+
+msgid "{renderer}: without the graphics card, so animations stutter. See Activity for why and what helps."
+msgstr "{renderer}: без видеокарты, поэтому анимации дёргаются. Почему и что делать — в «Журнале»."

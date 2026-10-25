@@ -34,6 +34,9 @@ class StubEngine:
         self.calls = []
         self.vpn_mode = False
         self.vpn_unavailable = False
+        self.is_running = False
+        self.STOP_GRACE_SECONDS = 5.0
+        self.VPN_STOP_GRACE_SECONDS = 12.0
         self.state_changed, self.notice_received = Signal(), Signal()
         self.output_received, self.stats_updated, self.regions_updated = Signal(), Signal(), Signal()
 
@@ -104,6 +107,53 @@ class ViewModelTests(unittest.TestCase):
         self.assertTrue(self.vm.slow_to_connect)
         self.engine.set_state(TunnelState.DISCONNECTED)
         self.assertFalse(self.vm.slow_to_connect)
+
+    def pump(self, seconds=0.2):
+        from gi.repository import GLib
+        import time as _time
+        deadline = _time.monotonic() + seconds
+        context = GLib.MainContext.default()
+        while _time.monotonic() < deadline:
+            context.iteration(False)
+
+    def test_quitting_with_nothing_running_finishes_straight_away(self):
+        done = []
+        self.vm.stop_for_exit(lambda: done.append(1))
+        self.pump()
+        self.assertEqual([1], done)
+
+    def test_quitting_waits_for_the_engine_without_blocking_and_finishes_once(self):
+        done = []
+        self.engine.is_running = True
+        self.vm.stop_for_exit(lambda: done.append(1))
+        self.assertIn(("stop",), self.engine.calls)
+        self.pump()
+        self.assertEqual([], done)                       # still stopping
+        self.engine.set_state(TunnelState.DISCONNECTING)
+        self.engine.set_state(TunnelState.DISCONNECTED)
+        self.pump()
+        self.assertEqual([1], done)
+        self.engine.set_state(TunnelState.DISCONNECTED)  # no second call
+        self.pump()
+        self.assertEqual([1], done)
+
+    def test_drawing_without_the_graphics_card_is_explained_in_the_log(self):
+        self.vm.set_renderer("GskCairoRenderer")
+        self.assertTrue(self.vm.software_rendering)
+        self.assertIn("without the graphics card", self.vm.log[-1].message)
+        self.assertEqual("warning", self.vm.log[-1].level.name.lower())
+
+    def test_a_software_gl_driver_counts_as_no_graphics_card(self):
+        self.vm.set_renderer("GskNglRenderer", "llvmpipe (LLVM 19.1.7, 256 bits)")
+        self.assertTrue(self.vm.software_rendering)
+        self.assertIn("llvmpipe", self.vm.renderer_text)
+
+    def test_a_real_graphics_card_is_only_noted(self):
+        self.vm.set_renderer("GskNglRenderer", "AMD Radeon RX 6600 (radeonsi, navi23, LLVM 19.1.7)")
+        self.assertFalse(self.vm.software_rendering)
+        self.assertEqual("info", self.vm.log[-1].level.name.lower())
+        self.assertEqual("GskNglRenderer, AMD Radeon RX 6600 (radeonsi, navi23, LLVM 19.1.7)",
+                         self.vm.renderer_text)
 
     def test_in_vpn_mode_the_system_proxy_is_left_alone(self):
         # Everything already goes through the tun; pointing programs at the

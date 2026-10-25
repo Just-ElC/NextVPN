@@ -18,8 +18,14 @@ in
     enable = lib.mkEnableOption "NextVPN, a GTK client for the Psiphon network";
     package = lib.mkOption {
       type = lib.types.package;
-      default = self.packages.${pkgs.stdenv.hostPlatform.system}.nextvpn;
-      defaultText = lib.literalExpression "nextvpn.packages.\${system}.nextvpn";
+      # Built from the system's own nixpkgs: GTK then loads the same Mesa and
+      # Vulkan drivers the system ships, instead of falling back to drawing
+      # without the graphics card, which makes every animation stutter.
+      default = pkgs.callPackage "${self}/linux/packaging/nix/package.nix" {
+        psiphon-tunnel-core = self.packages.${pkgs.stdenv.hostPlatform.system}.psiphon-tunnel-core;
+        nextvpnSource = self;
+      };
+      defaultText = lib.literalExpression "NextVPN built with the system's pkgs";
       description = "The NextVPN package to install.";
     };
   };

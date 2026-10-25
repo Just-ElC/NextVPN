@@ -160,9 +160,6 @@ class NextVpnApplication(Adw.Application):
         Parks the app in the tray, but only if there is a tray to park in: an app
         with no window and no icon would be running with no way to reach it.
         """
-        if not self.vm.settings.minimise_to_tray:
-            self.window.present()
-            return
         if self.tray.available:
             return
 
@@ -187,8 +184,10 @@ class NextVpnApplication(Adw.Application):
         self.window.present_from_tray()
 
     def _toggle_window(self) -> None:
+        # A click on the tray icon hides the window again, whatever the close
+        # button does: the icon is right there to bring it back.
         if self.window is not None and self.window.get_visible() and self.window.is_active():
-            if self.window.keeps_running_when_closed():
+            if self.window.tray_available():
                 self.window.save_geometry()
                 self.window.set_visible(False)
                 return
@@ -230,9 +229,16 @@ class NextVpnApplication(Adw.Application):
         if self._quitting:
             return
         self._quitting = True
+        # Gone from the screen at once; the tunnel is taken down after.
         if self.window is not None:
             self.window.really_closing = True
             self.window.save_geometry()
+            self.window.set_visible(False)
+        if self.tray is not None:
+            self.tray.dispose()
+        self.vm.stop_for_exit(self._finish_quit)
+
+    def _finish_quit(self) -> None:
         self._teardown()
         if self._held:
             self._held = False

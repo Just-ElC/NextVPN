@@ -34,7 +34,7 @@ class AppSettingsTests(unittest.TestCase):
         self.assertEqual(0, s.local_http_proxy_port)     # engine picks a free port
         self.assertEqual(0, s.local_socks_proxy_port)
         self.assertTrue(s.set_system_proxy)
-        self.assertTrue(s.minimise_to_tray)
+        self.assertFalse(s.close_to_tray)               # the close button quits
         self.assertFalse(s.start_at_login)
         self.assertFalse(s.connect_on_launch)
         self.assertFalse(s.split_tunnel_own_region)      # everything through the tunnel
@@ -74,7 +74,7 @@ class AppSettingsTests(unittest.TestCase):
             start_at_login=True,
             connect_on_launch=True,
             start_minimised=True,
-            minimise_to_tray=False,
+            close_to_tray=True,
             theme=AppTheme.DARK,
             window_width=1200,
             window_height=800,
@@ -119,8 +119,14 @@ class AppSettingsTests(unittest.TestCase):
         self.path().write_text('{"theme":2}')
         loaded = AppSettings.load_from(self.path())
         self.assertEqual(AppTheme.DARK, loaded.theme)
-        self.assertTrue(loaded.minimise_to_tray)
+        self.assertFalse(loaded.close_to_tray)
         self.assertEqual(DEFAULT_BYPASS_LIST, loaded.proxy_bypass_list)
+
+    def test_the_old_tray_setting_no_longer_keeps_the_app_running_on_close(self):
+        # 1.1.0 and earlier saved minimise_to_tray: true for everyone. Closing
+        # the window has to close the app after an upgrade too.
+        self.path().write_text('{"minimise_to_tray": true}')
+        self.assertFalse(AppSettings.load_from(self.path()).close_to_tray)
 
     def test_a_field_of_the_wrong_type_falls_back_alone(self):
         self.path().write_text(json.dumps({
